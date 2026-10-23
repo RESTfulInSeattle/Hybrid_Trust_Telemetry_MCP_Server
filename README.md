@@ -181,7 +181,7 @@ Once connected, you can prompt your AI assistant naturally:
 
 ---
 
-## 💼 Portfolio & Interview Framing (e.g. Microsoft Foundry)
+## 💼 Portfolio & Interview Framing
 
 This project is tailored to demonstrate senior-level AI systems engineering concepts:
 
