@@ -46,20 +46,29 @@ sequenceDiagram
 
 ---
 
-## 2. FastMCP Schema Generation & Tool Contracts
+## 2. MCPServer (FastMCP) Schema Generation & Tool Contracts
 
-The server leverages `FastMCP` (from the official Python MCP SDK), which inspects Python function signatures and docstrings at runtime to generate OpenAPI-compliant JSON Schemas.
+The server leverages `MCPServer` (the high-level API previously known as `FastMCP` in v1, now standard in the official Python MCP 2.x SDK), which inspects Python function signatures and docstrings at runtime to generate OpenAPI-compliant JSON Schemas.
 
 ### From Code to LLM Prompt Schema
 
 ```python
+from mcp.server import MCPServer
+
+mcp = MCPServer("TelemetryInspector")
+
 @mcp.tool()
 def read_recent_errors(service_name: str, lines: int = 50) -> str:
-    """Retrieves the most recent error logs for a specific service."""
+    """Retrieves the most recent error logs for a specific service.
+    
+    Args:
+        service_name: The name of the service (e.g., 'auth', 'payment', 'database')
+        lines: The number of lines to tail from the log file (default 50)
+    """
     ...
 ```
 
-Is translated by FastMCP into the following MCP Tool Specification:
+Is translated by the MCP SDK into the following JSON Schema for LLM tool invocation:
 
 ```json
 {
@@ -168,7 +177,7 @@ While this repository defaults to a local mock log file store for rapid setup an
 
 ```text
 ┌──────────────────────────────────────────────────┐
-│              FastMCP Server Interface            │
+│              MCPServer Interface (stdio)         │
 └────────────────────────┬─────────────────────────┘
                          │
            ┌─────────────┴─────────────┐

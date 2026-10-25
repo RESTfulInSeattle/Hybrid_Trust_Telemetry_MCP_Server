@@ -6,9 +6,9 @@ Welcome to the **Telemetry MCP Server** repository. This document serves as the 
 
 ## 1. Project Identity & Purpose
 
-- **Project Name:** Telemetry MCP Server (`telemetry-mcp`)
+- **Project Name:** Telemetry MCP Server (`telemetry-mcp-server`)
 - **Protocol:** [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
-- **Primary Framework:** Python `FastMCP` (via `mcp[cli]`)
+- **Primary Framework:** Python `MCPServer` (via official `mcp[cli]>=2.0`, previously known as `FastMCP` in v1)
 - **Core Purpose:** Provide a secure, governed Model Context Protocol server that allows AI agents and LLM clients (Continue.dev, Claude Desktop, Cursor, local LLMs like Qwen) to inspect system health, read application logs, and diagnose incidents **without granting unrestricted shell or filesystem access**.
 - **Target Showcase:** AI Engineering, Agentic Tool Governance, Enterprise Observability, and technical interviews (e.g., Microsoft Foundry, AI Platform teams).
 
@@ -43,13 +43,14 @@ Logs can be massive. Never return unbounded log streams that risk blowing up the
 
 | Category | Standard / Tool | Version / Rule |
 | :--- | :--- | :--- |
-| **Language** | Python | `>= 3.11` |
+| **Language** | Python | `>= 3.12` |
 | **Package Management** | `uv` | Always use `uv add`, `uv run`, `uv sync` |
-| **MCP Implementation** | `FastMCP` from `mcp[cli]` | Official Anthropic/MCP Python SDK |
+| **MCP Implementation** | `MCPServer` from `mcp[cli]>=2.0` | Official Anthropic/MCP Python SDK v2.x |
 | **Data Validation** | Pydantic v2 | Used for structured tool parameters & responses |
 | **Code Formatting & Linting** | `ruff` | `uv run ruff check .` & `uv run ruff format .` |
 | **Type Checking** | `mypy` | Strict typing on all tool signatures |
 | **Testing** | `pytest`, `pytest-asyncio` | Unit tests for all tools & security boundaries |
+| **Inspector Tooling** | Node.js / `npx` | Required only for the `mcp dev` web inspector UI |
 
 > [!IMPORTANT]
 > **No Legacy Package Managers:** Do not invoke `pip install` or create raw virtual environments with `python -m venv`. Always use `uv`.
@@ -70,9 +71,9 @@ Telemetry_MCP_Server/
 ├── building_your_first_mcp_server.md  # Original tutorial / foundation walkthrough
 ├── pyproject.toml                     # Project metadata and dependencies (managed by uv)
 ├── src/
-│   └── telemetry_mcp/
+│   └── telemetry_mcp_server/
 │       ├── __init__.py                # Package exports
-│       ├── server.py                  # FastMCP server instance and entrypoint
+│       ├── server.py                  # MCPServer instance and entrypoint
 │       ├── config.py                  # Environment config (log dirs, line limits, auth)
 │       ├── security.py                # Path traversal sanitizers and input validators
 │       ├── tools/                     # Modular MCP tools
@@ -117,15 +118,15 @@ When asked to implement a new tool (e.g., `search_logs_by_pattern`), follow this
    - Happy path with mock log data.
    - Missing file / service not found.
    - Adversarial input (e.g., `service_name="../../../etc"`).
-6. **Verify with MCP Inspector:**
-   Run `uv run mcp dev src/telemetry_mcp/server.py` and test tool invocation.
+6. **Verify with Tests or MCP Inspector:**
+   Run tests via `uv run pytest` or launch the inspector via `uv run mcp dev src/telemetry_mcp_server/server.py`.
 
 ```python
-# Example: Canonical Tool Pattern
-from mcp.server.fastmcp import FastMCP
-from telemetry_mcp.security import safe_resolve_log_path
+# Example: Canonical Tool Pattern (MCP 2.x)
+from mcp.server import MCPServer
+from telemetry_mcp_server.security import safe_resolve_log_path
 
-mcp = FastMCP("TelemetryInspector")
+mcp = MCPServer("TelemetryInspector")
 
 @mcp.tool()
 def search_logs_by_pattern(service_name: str, pattern: str, max_matches: int = 20) -> str:
@@ -187,8 +188,11 @@ uv run mypy src/
 # 3. Test suite execution
 uv run pytest -v
 
-# 4. MCP inspector smoke test (syntax & schema generation)
-uv run mcp dev src/telemetry_mcp/server.py
+# 4. Direct Python smoke test
+uv run python -c "from telemetry_mcp_server.server import get_system_health; print(get_system_health())"
+
+# 5. MCP inspector test (requires node/npx)
+uv run mcp dev src/telemetry_mcp_server/server.py
 ```
 
 ### Path Traversal Defense Verification Matrix
@@ -205,5 +209,6 @@ Every tool that touches logs must pass these negative test inputs:
 
 When discussing or demonstrating this codebase in portfolio reviews or technical interviews:
 - **Core Narrative:** *"Modern AI applications require governed capability boundaries. Unrestricted shell access is a massive security hazard. This project demonstrates how the Model Context Protocol (MCP) provides a typed, observable, and defense-in-depth API boundary for LLMs performing automated SRE and telemetry diagnostics."*
-- **Architecture Highlight:** FastMCP abstraction layer, strict path containment, bounded response sizes for context window management, and native JSON-RPC stdio transport.
+- **Architecture Highlight:** `MCPServer` high-level abstraction layer (MCP 2.x), strict path containment, bounded response sizes for context window management, and native JSON-RPC stdio transport.
+- **Protocol Currency:** Fluent with the evolution from v1 FastMCP to v2 MCPServer in the official Python SDK.
 - **AI-First Pedigree:** Built using `AGENTS.md` as an executable agent contract, demonstrating fluency with modern agentic workflows, prompt-driven tool design, and automated regression testing.

@@ -17,20 +17,21 @@ flowchart LR
 ---
 
 ## Phase 1: MVP Foundation (Completed Baseline)
-*Focus: Understanding MCP basics, FastMCP, and local LLM client binding.*
+*Focus: Understanding MCP basics, MCPServer architecture, and local LLM client binding.*
 
-- [x] Initialize project using `uv` with official `mcp[cli]` SDK.
-- [x] Implement baseline `FastMCP("TelemetryInspector")` instance.
+- [x] Initialize project using `uv` with official `mcp[cli]` (v2.x) SDK.
+- [x] Implement baseline `MCPServer("TelemetryInspector")` instance.
 - [x] Expose initial tools:
   - `get_system_health()`: Returns mock JSON with service health, latency, and alert count.
   - `read_recent_errors(service_name, lines)`: Tails local log files.
-- [x] Manual testing via `uv run mcp dev`.
+- [x] Local verification via `uv run python` or `uv run mcp dev src/telemetry_mcp_server/server.py`.
 - [x] Bind to VS Code / Continue.dev configuration.
 
 **Key Competencies Acquired:**
 - Model Context Protocol primitives (stdio, tool discovery, client-host architecture).
-- FastMCP tool decorators and dynamic schema generation.
+- `MCPServer` tool decorators and dynamic OpenAPI schema generation.
 - Local AI pairing with Continue.dev.
+- Navigating evolving protocol SDK specifications (MCP 1.x to 2.x migration).
 
 ---
 
@@ -38,7 +39,7 @@ flowchart LR
 *Focus: Defense-in-depth, input sanitization, test-driven tool development.*
 
 - [ ] **Path Traversal Protection:**
-  - Create `telemetry_mcp.security` module.
+  - Create `telemetry_mcp_server.security` module.
   - Implement canonical path validation (`os.path.realpath`, `os.path.commonpath`).
   - Restrict `service_name` to strict regex identifier (`^[a-zA-Z0-9_-]+$`).
 - [ ] **Context Window Bounds:**

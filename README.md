@@ -1,9 +1,9 @@
 # Telemetry MCP Server: Governed Observability for AI Agents
 
-[![Model Context Protocol](https://img.shields.io/badge/Protocol-MCP-blue.svg)](https://modelcontextprotocol.io/)
+[![Model Context Protocol](https://img.shields.io/badge/Protocol-MCP%202.x-blue.svg)](https://modelcontextprotocol.io/)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
 [![Package Manager](https://img.shields.io/badge/Package%20Manager-uv-brightgreen.svg)](https://docs.astral.sh/uv/)
-[![SDK](https://img.shields.io/badge/Framework-FastMCP-purple.svg)](https://github.com/modelcontextprotocol/python-sdk)
+[![SDK](https://img.shields.io/badge/Framework-MCPServer%20(FastMCP)-purple.svg)](https://github.com/modelcontextprotocol/python-sdk)
 [![Code Style](https://img.shields.io/badge/Code%20Style-Ruff-black.svg)](https://github.com/astral-sh/ruff)
 
 > **A production-ready Model Context Protocol (MCP) server providing governed, secure application telemetry, system health probes, and log diagnostics to AI models.**
@@ -47,7 +47,7 @@ flowchart LR
         Client["MCP Client Engine"]
     end
 
-    subgraph Server["Telemetry MCP Server (Python FastMCP)"]
+    subgraph Server["Telemetry MCP Server (Python MCPServer / MCP 2.x)"]
         RPC["JSON-RPC 2.0 Router (stdio)"]
         Sec["Security & Path Boundary Guards"]
         
@@ -88,6 +88,7 @@ flowchart LR
 - 🛡️ **Defense-in-Depth Path Traversal Protection:** Validates every file access against directory traversal attacks (`../`, symlinks, null-byte injections).
 - 📊 **Context-Budget Aware:** Automatically clamps log output to prevent context window explosion or token exhaustion.
 - ⚡ **High-Performance Python Tooling:** Built on Python 3.11+ and packaged with Astral's `uv` for instantaneous dependency resolution.
+- 🔄 **Modern MCP 2.x Native:** Uses the official Anthropic MCP 2.x `MCPServer` architecture with full backwards conceptual compatibility with FastMCP.
 - 🧪 **First-Class Testing & Verification:** Includes comprehensive test suites for happy paths, negative boundaries, and edge cases.
 - 🤖 **AI-First Specification (`AGENTS.md`):** Designed from day one to be developed, maintained, and extended by autonomous AI coding agents.
 
@@ -96,10 +97,15 @@ flowchart LR
 ## ⚡ Quickstart Guide
 
 ### 1. Prerequisites
-Install `uv` (modern Python package manager):
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
+- **Python:** `>= 3.11`
+- **`uv` (Package Manager):**
+  ```bash
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+- **Node.js & `npx` (Optional, required only for the `mcp dev` web inspector UI):**
+  ```bash
+  brew install node
+  ```
 
 ### 2. Clone & Setup
 ```bash
@@ -110,12 +116,19 @@ cd Telemetry_MCP_Server
 uv sync
 ```
 
-### 3. Test with the Interactive MCP Inspector
-The MCP SDK comes with an official web inspector. Spin it up instantly without needing an LLM:
+### 3. Test the Server
+
+#### Option A: Interactive Web Inspector (`mcp dev`)
+Test your tools in a browser-based UI using the official MCP inspector:
 ```bash
 uv run mcp dev src/telemetry_mcp_server/server.py
 ```
-*Open the displayed browser URL to interactively invoke tools, inspect JSON schemas, and review protocol messages.*
+*(Requires `npx` / Node.js installed via `brew install node`).*
+
+#### Option B: Direct Python Smoke Test (No Node.js needed)
+```bash
+uv run python -c "from telemetry_mcp_server.server import get_system_health; print(get_system_health())"
+```
 
 ---
 
@@ -133,10 +146,9 @@ Add the server configuration to `~/.continue/config.json`:
       "args": [
         "run",
         "--directory",
-        "/ABSOLUTE/PATH/TO/Telemetry_MCP_Server",
+        "/Users/YOUR_MAC_USERNAME/Development/Telemetry_MCP_Server",
         "python",
-        "-m",
-        "telemetry_mcp.server"
+        "src/telemetry_mcp_server/server.py"
       ]
     }
   ]
@@ -154,10 +166,9 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
       "args": [
         "run",
         "--directory",
-        "/ABSOLUTE/PATH/TO/Telemetry_MCP_Server",
+        "/Users/YOUR_MAC_USERNAME/Development/Telemetry_MCP_Server",
         "python",
-        "-m",
-        "telemetry_mcp.server"
+        "src/telemetry_mcp_server/server.py"
       ]
     }
   }
@@ -188,6 +199,7 @@ This project is tailored to demonstrate senior-level AI systems engineering conc
 | Interview Talking Point | Implementation in this Repository |
 | :--- | :--- |
 | **Agent Governance** | Enforcing strict API boundaries rather than raw terminal execution. |
+| **Protocol Evolution (MCP 2.x)** | Up-to-date with the official Anthropic MCP 2.x standard (`MCPServer`), migrating cleanly from v1 `FastMCP`. |
 | **Tool Design for LLMs** | Semantic docstrings engineered for zero-shot tool selection by small/local LLMs (Qwen 30B, Llama 3) and frontier models. |
 | **Security & Containment** | Defensive path resolution preventing directory traversal (`tests/test_security.py`). |
 | **Context Window Economics** | Bounded line tailing and pagination to prevent log flooding into LLM prompts. |
@@ -201,7 +213,7 @@ This project is tailored to demonstrate senior-level AI systems engineering conc
 - 🏛️ [**`ARCHITECTURE.md`**](./ARCHITECTURE.md) — Deep dive into the MCP protocol, security boundary design, and wire protocol.
 - 🗺️ [**`ROADMAP.md`**](./ROADMAP.md) — Phased skill development curriculum (MVP to Enterprise OpenTelemetry).
 - 🎬 [**`SHOWCASE_RUNBOOK.md`**](./SHOWCASE_RUNBOOK.md) — 5-minute live demo script and interview walkthrough.
-- 📖 [**`building_your_first_mcp_server.md`**](./building_your_first_mcp_server.md) — Original introductory walkthrough.
+- 📖 [**`building_your_first_mcp_server.md`**](./building_your_first_mcp_server.md) — Original foundation walkthrough.
 
 ---
 
