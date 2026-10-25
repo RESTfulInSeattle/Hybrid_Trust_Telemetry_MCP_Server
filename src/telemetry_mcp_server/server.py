@@ -1,10 +1,10 @@
 import os
 import json
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 
 # Initialize the FastMCP server
 # This name will appear in Claude/Continue when the tool is loaded
-mcp = FastMCP("TelemetryInspector")
+mcp = MCPServer("TelemetryInspector")
 
 # Mock log directory for this example
 LOG_DIR = "./logs"

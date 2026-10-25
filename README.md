@@ -113,7 +113,7 @@ uv sync
 ### 3. Test with the Interactive MCP Inspector
 The MCP SDK comes with an official web inspector. Spin it up instantly without needing an LLM:
 ```bash
-uv run mcp dev src/telemetry_mcp/server.py
+uv run mcp dev src/telemetry_mcp_server/server.py
 ```
 *Open the displayed browser URL to interactively invoke tools, inspect JSON schemas, and review protocol messages.*
 
