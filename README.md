@@ -203,17 +203,20 @@ This project is tailored to demonstrate senior-level AI systems engineering conc
 | **Tool Design for LLMs** | Semantic docstrings engineered for zero-shot tool selection by small/local LLMs (Qwen 30B, Llama 3) and frontier models. |
 | **Security & Containment** | Defensive path resolution preventing directory traversal (`tests/test_security.py`). |
 | **Context Window Economics** | Bounded line tailing and pagination to prevent log flooding into LLM prompts. |
+| **Hybrid-Trust Architecture** | Protecting trade secrets by binding local models (Qwen, Llama) to sensitive telemetry while using cloud frontier models (Claude, GPT) for general reasoning. |
 | **AI-First Engineering** | Machine-readable development contract codified in [`AGENTS.md`](./AGENTS.md). |
 
 ---
 
 ## 📚 Supporting Documentation
 
+- 🧭 [**Documentation Hub (`docs/README.md`)**](./docs/README.md) — Central documentation index and navigation map.
 - 🤖 [**`AGENTS.md`**](./AGENTS.md) — The AI agent operating contract, coding standards, and runbooks.
-- 🏛️ [**`ARCHITECTURE.md`**](./ARCHITECTURE.md) — Deep dive into the MCP protocol, security boundary design, and wire protocol.
-- 🗺️ [**`ROADMAP.md`**](./ROADMAP.md) — Phased skill development curriculum (MVP to Enterprise OpenTelemetry).
-- 🎬 [**`SHOWCASE_RUNBOOK.md`**](./SHOWCASE_RUNBOOK.md) — 5-minute live demo script and interview walkthrough.
-- 📖 [**`building_your_first_mcp_server.md`**](./building_your_first_mcp_server.md) — Original foundation walkthrough.
+- 🏛️ [**`docs/architecture.md`**](./docs/architecture.md) — Deep dive into the MCP protocol, security boundary design, and wire protocol.
+- 🛡️ [**`docs/architecture/hybrid_trust_use_cases.md`**](./docs/architecture/hybrid_trust_use_cases.md) — Enterprise hybrid-trust use cases, trade secret protection, and threat models.
+- 🗺️ [**`docs/roadmap.md`**](./docs/roadmap.md) — Phased skill development curriculum (MVP to Enterprise OpenTelemetry).
+- 🎬 [**`docs/runbooks/showcase_runbook.md`**](./docs/runbooks/showcase_runbook.md) — 5-minute live demo script and interview walkthrough.
+- 📖 [**`docs/tutorials/building_your_first_mcp_server.md`**](./docs/tutorials/building_your_first_mcp_server.md) — Step-by-step foundation walkthrough.
 
 ---
 

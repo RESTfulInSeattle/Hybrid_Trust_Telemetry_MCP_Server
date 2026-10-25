@@ -80,7 +80,7 @@ Demonstrate how the server handles adversarial or malicious inputs:
 ---
 
 ### Step 4: Highlighting the AI-First Development Process (60 seconds)
-Open [`AGENTS.md`](./AGENTS.md) in the editor.
+Open [`AGENTS.md`](../../AGENTS.md) in the editor.
 
 **Talking Point:**
 > *"I designed this project using an AI-first development methodology. `AGENTS.md` acts as an executable operating contract for coding assistants. It specifies our architectural rules, tool design guidelines, security test requirements, and quality gates so that human engineers and AI agents can collaborate with zero ambiguity."*
@@ -126,4 +126,4 @@ Open [`AGENTS.md`](./AGENTS.md) in the editor.
 
 ### Q5: "How did you manage the transition from MCP SDK 1.x to 2.x in this project?"
 > **Answer:**
-> *"When building with emerging agent standards, protocol SDKs evolve rapidly. In the Python MCP SDK 2.x release, the legacy `FastMCP` class was migrated to `MCPServer` in `mcp.server`. Rather than pinning an outdated 1.x dependency, I updated our architecture to the 2.x `MCPServer` paradigm and documented the migration pattern in `AGENTS.md` and `building_your_first_mcp_server.md`. This ensures our tools leverage the latest streaming transports and security controls."*
+> *"When building with emerging agent standards, protocol SDKs evolve rapidly. In the Python MCP SDK 2.x release, the legacy `FastMCP` class was migrated to `MCPServer` in `mcp.server`. Rather than pinning an outdated 1.x dependency, I updated our architecture to the 2.x `MCPServer` paradigm and documented the migration pattern in [`AGENTS.md`](../../AGENTS.md) and [`building_your_first_mcp_server.md`](../tutorials/building_your_first_mcp_server.md). This ensures our tools leverage the latest streaming transports and security controls."*

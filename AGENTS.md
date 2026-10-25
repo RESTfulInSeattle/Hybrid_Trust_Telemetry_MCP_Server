@@ -63,13 +63,21 @@ Agents must adhere to the following directory layout:
 
 ```text
 Telemetry_MCP_Server/
-├── AGENTS.md                          # This agent operating specification
-├── README.md                          # Public showcase, quickstart & architecture overview
-├── ARCHITECTURE.md                    # Deep-dive system design, security & MCP mechanics
-├── ROADMAP.md                         # Phased skill development & feature progression
-├── SHOWCASE_RUNBOOK.md                # 5-minute live demo script & interview talking points
-├── building_your_first_mcp_server.md  # Original tutorial / foundation walkthrough
+├── AGENTS.md                          # This agent operating specification & development contract
+├── README.md                          # Public showcase, quickstart & documentation index
 ├── pyproject.toml                     # Project metadata and dependencies (managed by uv)
+├── docs/                              # Project documentation & guides
+│   ├── README.md                      # Documentation index & navigation map
+│   ├── architecture.md                # Deep-dive system design, security & MCP mechanics
+│   ├── architecture/                  # Hybrid-Trust architecture patterns & use cases
+│   │   ├── README.md                  # Architecture index
+│   │   ├── hybrid_trust_use_cases.md  # Trade secret defense & enterprise use cases
+│   │   └── ...                        # Dynamic DLP, Sub-Agent, IDE profile, Gateway router
+│   ├── roadmap.md                     # Phased skill development & feature progression
+│   ├── runbooks/                      # Operational runbooks & interview guides
+│   │   └── showcase_runbook.md        # 5-minute live demo script & interview talking points
+│   └── tutorials/                     # Step-by-step guides & tutorials
+│       └── building_your_first_mcp_server.md # Foundation walkthrough
 ├── src/
 │   └── telemetry_mcp_server/
 │       ├── __init__.py                # Package exports

@@ -191,3 +191,18 @@ While this repository defaults to a local mock log file store for rapid setup an
 ```
 
 This abstraction allows you to demonstrate local capabilities today and articulate a clear path toward enterprise OpenTelemetry / CloudWatch / Datadog integration in technical reviews.
+
+---
+
+## 6. Hybrid-Trust Architecture & Trade Secret Protection
+
+In enterprise environments, telemetry frequently contains trade secrets (e.g., proprietary trading logic, algorithmic weights, database topology, or PII/PCI/HIPAA regulated data). 
+
+To balance the deep reasoning power of **Frontier Cloud Models** (Claude 3.5 Sonnet, GPT-4o) with the absolute data sovereignty of **Local On-Premise Models** (Qwen 2.5, Llama 3 on Ollama / `llama.cpp`), this repository supports **Hybrid-Trust Architecture Patterns**:
+
+* 🏢 [**Hybrid-Trust Architecture & Enterprise Use Cases**](./architecture/hybrid_trust_use_cases.md) — Comprehensive guide covering HFT trading algorithms, HIPAA/PCI fintech triage, air-gapped defense systems, threat modeling, and reference configurations.
+* 🛡️ [**Dynamic DLP Pattern**](./architecture/dynamic_dlp_pattern.md) — Embedding context-aware payload redaction directly inside the MCP server.
+* 🤝 [**Sub-Agent Delegation Pattern**](./architecture/sub_agent_delegation_pattern.md) — Two-tier orchestration delegating raw telemetry analysis to local agents.
+* ⚙️ [**Strict IDE Profile Binding**](./architecture/strict_ide_profile_binding.md) — Profile air-gapping in Continue.dev / VS Code.
+* 🔀 [**Gateway Router Pattern**](./architecture/gateway_router_pattern.md) — Tool-triggered dynamic model swapping at the network gateway proxy.
+
