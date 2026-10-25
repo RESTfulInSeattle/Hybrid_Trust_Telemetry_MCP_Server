@@ -83,9 +83,56 @@ flowchart LR
 
 ---
 
+## 🛡️ Hybrid-Trust Architecture: Protecting Trade Secrets
+
+While MCP enforces governed API boundaries, enterprise deployments face a critical challenge: **how can teams leverage the reasoning power of frontier cloud models (Claude 3.5 Sonnet, GPT-4o) without exposing trade secrets embedded in application telemetry?**
+
+Real-world production logs frequently contain proprietary algorithm parameters, internal infrastructure topologies (RFC 1918 IPs), and regulated customer data (PII/PCI/HIPAA). Transmitting raw logs to cloud APIs introduces significant IP exfiltration, training ingestion, and compliance risks.
+
+The **Hybrid-Trust Architecture** eliminates this dilemma by establishing two distinct operational trust zones:
+
+1. **Zero-Egress Zone (Local Trust Tier):** A local on-premise model (e.g., Qwen 2.5 32B or Llama 3 via Ollama / `llama.cpp` on an Apple Silicon Mac Studio or private LAN) connects directly to the Telemetry MCP Server. It inspects raw logs, parses proprietary stack traces, and analyzes internal telemetry entirely behind the firewall.
+2. **General Egress Zone (Frontier Tier):** Frontier cloud models receive only **sanitized summaries, abstract computer science problems, or scrubbed metrics**, allowing them to generate high-level architectural proposals, complex code refactorings, and pull requests without ever seeing raw trade secrets.
+
+```mermaid
+flowchart LR
+    subgraph Cloud["🌐 Frontier Cloud Zone (General Egress)"]
+        Frontier["Frontier Cloud Model<br/>(Claude 3.5 Sonnet / GPT-4o)<br/><i>Architectural synthesis & refactoring</i>"]
+    end
+
+    subgraph Boundary["🛡️ Governed Trust Boundary"]
+        Router["AI Gateway / Sanitizer Broker<br/>(LiteLLM / Sub-Agent Relay)"]
+    end
+
+    subgraph Local["🔒 Local Zero-Egress Zone (On-Premise / LAN)"]
+        LocalModel["Local Model<br/>(Qwen 2.5 / Llama 3 via Ollama)<br/><i>Raw telemetry & proprietary logic</i>"]
+        MCP["Telemetry MCP Server<br/>(MCPServer stdio / SSE)"]
+        Logs[("Proprietary Logs<br/>& Trade Secret Telemetry")]
+    end
+
+    Frontier <-->|"Sanitized problem abstractions<br/>& clean code proposals"| Router
+    Router <-->|"Delegation prompts &<br/>redacted summaries"| LocalModel
+    LocalModel <-->|"JSON-RPC (stdio)"| MCP
+    MCP <-->|"Bounded file reads"| Logs
+```
+
+### 📐 Supported Hybrid-Trust Patterns
+
+| Pattern | Mechanism | Best Used For |
+| :--- | :--- | :--- |
+| 🛡️ [**Dynamic DLP at MCP Layer**](./docs/architecture/dynamic_dlp_pattern.md) | In-server context-aware redaction evaluating client identity and network origin. | Scrubbing PII, tokens, and internal IPs before delivery to external agents. |
+| 🤝 [**Sub-Agent Delegation**](./docs/architecture/sub_agent_delegation_pattern.md) | Frontier cloud model prompts a local sub-agent to inspect raw logs and return a summary. | Proprietary trading algorithms, quantitative models, and core IP. |
+| ⚙️ [**Strict IDE Profile Binding**](./docs/architecture/strict_ide_profile_binding.md) | Air-gapping MCP servers strictly to local model profiles in Continue.dev / VS Code. | Air-gapped environments, defense systems (ITAR), and zero-cloud compliance. |
+| 🔀 [**Gateway Router Pattern**](./docs/architecture/gateway_router_pattern.md) | AI Gateway (LiteLLM) dynamically swaps models based on tool sensitivity. | Enterprise developer fleets requiring automated model switching. |
+
+👉 *For deep-dive use cases (HFT algorithmic trading, HIPAA/PCI compliance, air-gapped systems), threat modeling, and reference configs, see the [**Hybrid-Trust Architecture & Use Cases Guide**](./docs/architecture/hybrid_trust_use_cases.md).*
+
+---
+
 ## 🚀 Key Features
 
 - 🛡️ **Defense-in-Depth Path Traversal Protection:** Validates every file access against directory traversal attacks (`../`, symlinks, null-byte injections).
+- 🔒 **Hybrid-Trust & Trade Secret Defense:** Architectural patterns for pairing local on-premise models (zero cloud egress) with frontier models, preventing proprietary log leakage.
 - 📊 **Context-Budget Aware:** Automatically clamps log output to prevent context window explosion or token exhaustion.
 - ⚡ **High-Performance Python Tooling:** Built on Python 3.11+ and packaged with Astral's `uv` for instantaneous dependency resolution.
 - 🔄 **Modern MCP 2.x Native:** Uses the official Anthropic MCP 2.x `MCPServer` architecture with full backwards conceptual compatibility with FastMCP.
@@ -134,7 +181,7 @@ uv run python -c "from telemetry_mcp_server.server import get_system_health; pri
 
 ## 🔌 Connecting to LLM Hosts
 
-### VS Code with Continue.dev (Local LLM or API)
+### VS Code with Continue.dev (Standard Setup)
 Add the server configuration to `~/.continue/config.json`:
 
 ```json
@@ -152,6 +199,40 @@ Add the server configuration to `~/.continue/config.json`:
       ]
     }
   ]
+}
+```
+
+### Hybrid-Trust Dual-Profile Setup (Continue.dev)
+To enforce air-gapping between trade secrets and cloud APIs, isolate the Telemetry MCP server to a local model profile:
+
+```json
+{
+  "models": [
+    {
+      "title": "Cloud (No Telemetry Tools)",
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-20241022",
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    {
+      "title": "Local Secure (Telemetry & Trade Secrets)",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:32b",
+      "apiBase": "http://192.168.1.136:11434"
+    }
+  ],
+  "mcpServers": {
+    "TelemetryInspector": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/YOUR_MAC_USERNAME/Development/Telemetry_MCP_Server",
+        "python",
+        "src/telemetry_mcp_server/server.py"
+      ]
+    }
+  }
 }
 ```
 
@@ -214,6 +295,7 @@ This project is tailored to demonstrate senior-level AI systems engineering conc
 - 🤖 [**`AGENTS.md`**](./AGENTS.md) — The AI agent operating contract, coding standards, and runbooks.
 - 🏛️ [**`docs/architecture.md`**](./docs/architecture.md) — Deep dive into the MCP protocol, security boundary design, and wire protocol.
 - 🛡️ [**`docs/architecture/hybrid_trust_use_cases.md`**](./docs/architecture/hybrid_trust_use_cases.md) — Enterprise hybrid-trust use cases, trade secret protection, and threat models.
+- 📐 [**`docs/architecture/README.md`**](./docs/architecture/README.md) — Modular architecture patterns (Dynamic DLP, Sub-Agent, Profile Binding, Gateway Router).
 - 🗺️ [**`docs/roadmap.md`**](./docs/roadmap.md) — Phased skill development curriculum (MVP to Enterprise OpenTelemetry).
 - 🎬 [**`docs/runbooks/showcase_runbook.md`**](./docs/runbooks/showcase_runbook.md) — 5-minute live demo script and interview walkthrough.
 - 📖 [**`docs/tutorials/building_your_first_mcp_server.md`**](./docs/tutorials/building_your_first_mcp_server.md) — Step-by-step foundation walkthrough.
