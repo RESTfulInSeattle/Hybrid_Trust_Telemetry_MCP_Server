@@ -1,0 +1,28 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Testing & Linting
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Logs (keep sample files if tracked, ignore generated logs)
+logs/*.log
+!logs/.gitkeep
+
+# IDE & OS
+.DS_Store
+.idea/
+.vscode/
