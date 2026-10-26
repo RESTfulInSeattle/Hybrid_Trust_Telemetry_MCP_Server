@@ -35,21 +35,21 @@ flowchart LR
 
 ---
 
-## Phase 2: Security Hardening & Automated Testing (Current Target)
+## Phase 2: Security Hardening & Automated Testing (Completed)
 *Focus: Defense-in-depth, input sanitization, test-driven tool development.*
 
-- [ ] **Path Traversal Protection:**
+- [x] **Path Traversal Protection:**
   - Create `telemetry_mcp_server.security` module.
   - Implement canonical path validation (`os.path.realpath`, `os.path.commonpath`).
   - Restrict `service_name` to strict regex identifier (`^[a-zA-Z0-9_-]+$`).
-- [ ] **Context Window Bounds:**
+- [x] **Context Window Bounds:**
   - Clamp log tailing requests to safe upper limit (e.g., maximum 200 lines).
   - Truncate excessively long individual log lines (> 1,000 characters).
-- [ ] **Automated Test Suite (`pytest`):**
+- [x] **Automated Test Suite (`pytest`):**
   - Unit tests for happy-path log retrieval.
   - Negative security tests verifying rejection of `../`, `/etc/passwd`, and null bytes.
   - Mock log fixtures with realistic multi-service error scenarios.
-- [ ] **Static Analysis & Typing:**
+- [x] **Static Analysis & Typing:**
   - Add `ruff` formatting and linting rules.
   - Enforce `mypy` strict type checking on all tool signatures.
 
@@ -60,19 +60,19 @@ flowchart LR
 
 ---
 
-## Phase 3: MCP Resources & Incident Prompts
+## Phase 3: MCP Resources & Incident Prompts (Completed)
 *Focus: Mastering the complete MCP specification beyond simple tools.*
 
-- [ ] **Implement MCP Resources:**
+- [x] **Implement MCP Resources:**
   - `telemetry://health`: Expose real-time platform health summary as a readable resource.
   - `telemetry://logs/{service}`: Expose live service log streams as dynamic MCP resources.
-- [ ] **Implement MCP Prompts:**
+- [x] **Implement MCP Prompts:**
   - `incident_triage(service_name, incident_id)`: A standardized diagnostic prompt template that instructs the LLM to:
     1. Query `get_system_health` to evaluate system-wide blast radius.
     2. Tail error logs for the affected service.
     3. Synthesize root cause and suggest remediation steps.
-- [ ] **Service Discovery:**
-  - Tool `list_monitored_services()`: Automatically scans the log directory and returns available service names.
+- [x] **Service Discovery:**
+  - Tool `list_available_services()`: Automatically scans the log directory and returns available service names.
 
 **Key Competencies Acquired:**
 - MCP Resources vs. Tools distinction and architectural trade-offs.
@@ -81,10 +81,10 @@ flowchart LR
 
 ---
 
-## Phase 4: Enterprise Observability & Synthetic Workloads
+## Phase 4: Enterprise Observability & Synthetic Workloads (In Progress)
 *Focus: Real-world SRE tooling, structured log parsing, and regex searching.*
 
-- [ ] **Regex & Pattern Search Tool:**
+- [x] **Regex & Pattern Search Tool:**
   - Implement `search_logs_by_pattern(service_name, pattern, max_matches)` for pinpointing specific trace IDs, HTTP status codes, or exception classes.
 - [ ] **Structured JSON Log Support:**
   - Add parsing for structured JSON log entries (timestamps, log level, trace_id, caller).
