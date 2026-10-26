@@ -55,6 +55,7 @@ flowchart LR
             T1["get_system_health()"]
             T2["read_recent_errors(service, lines)"]
             T3["search_logs_by_pattern(service, query)"]
+            T4["list_available_services()"]
         end
 
         subgraph Resources["MCP Resources"]
@@ -177,6 +178,18 @@ uv run mcp dev src/telemetry_mcp_server/server.py
 uv run python -c "from telemetry_mcp_server.server import get_system_health; print(get_system_health())"
 ```
 
+#### Option C: Automated Test Suite & Static Analysis
+Execute the full regression test suite (happy paths, boundary conditions, and path traversal matrix) alongside code quality gates:
+```bash
+# Execute 36+ automated unit & security tests
+uv run pytest -v
+
+# Verify code formatting, linting, and strict type hints
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy src/
+```
+
 ---
 
 ## 🔌 Connecting to LLM Hosts
@@ -255,6 +268,60 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
   }
 }
 ```
+
+### Local AI Distributed Coding Environment (Tier 3 Context Layer)
+
+When integrated into the **Local AI Distributed Coding Environment** (M5 Pro host running `vllm-mlx` and `litellm` alongside Mac and Windows 11 clients):
+
+#### Mode A: Local Client on Mac Host (Standard stdio)
+For VS Code or Continue running locally on the Mac inference host:
+
+```json
+{
+  "mcpServers": [
+    {
+      "name": "TelemetryInspector",
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/YOUR_MAC_USERNAME/Development/Telemetry_MCP_Server",
+        "telemetry-mcp-server"
+      ]
+    }
+  ]
+}
+```
+*(Or invoke via `"args": ["run", "--directory", "...", "python", "src/telemetry_mcp_server/server.py"]`)*
+
+#### Mode B: Remote LAN Clients (Windows 11 / Remote IDEs via SSE)
+Because Windows 11 clients on the local network cannot spawn local child processes on the Mac host over stdio, run the Telemetry MCP Server as a background daemon on the Mac listening on all network interfaces via SSE:
+
+```bash
+# On Mac Host (Terminal):
+uv run telemetry-mcp-server --transport sse --host 0.0.0.0 --port 8080
+```
+
+Then configure your remote Windows client (VS Code / Continue.dev / Agent Harness) to connect directly to the Mac's LAN IP:
+
+```json
+{
+  "mcpServers": [
+    {
+      "name": "TelemetryInspector",
+      "url": "http://<mac_ip_address>:8080/sse"
+    }
+  ]
+}
+```
+
+#### CLI Options & Environment Variables
+| Option | Environment Variable | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `--transport` | `MCP_TRANSPORT` | `stdio` | Transport protocol (`stdio`, `sse`, `streamable-http`) |
+| `--host` | `MCP_HOST` | `0.0.0.0` | Bind host address for network transports |
+| `--port` | `MCP_PORT` | `8080` | Bind port number for network transports |
+| `--log-dir` | `TELEMETRY_LOG_DIR` | `./logs` | Directory path containing monitored service logs |
 
 ---
 

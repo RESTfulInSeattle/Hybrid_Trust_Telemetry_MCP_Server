@@ -57,10 +57,11 @@ from mcp.server import MCPServer
 
 mcp = MCPServer("TelemetryInspector")
 
+
 @mcp.tool()
 def read_recent_errors(service_name: str, lines: int = 50) -> str:
     """Retrieves the most recent error logs for a specific service.
-    
+
     Args:
         service_name: The name of the service (e.g., 'auth', 'payment', 'database')
         lines: The number of lines to tail from the log file (default 50)
@@ -126,6 +127,7 @@ import os
 import re
 
 ALLOWED_SERVICE_REGEX = re.compile(r"^[a-zA-Z0-9_-]+$")
+
 
 def safe_resolve_log_path(service_name: str, base_dir: str) -> str:
     # Layer 1: Whitelist allowed character set

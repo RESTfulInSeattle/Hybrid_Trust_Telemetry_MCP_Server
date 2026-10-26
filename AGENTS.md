@@ -136,8 +136,11 @@ from telemetry_mcp_server.security import safe_resolve_log_path
 
 mcp = MCPServer("TelemetryInspector")
 
+
 @mcp.tool()
-def search_logs_by_pattern(service_name: str, pattern: str, max_matches: int = 20) -> str:
+def search_logs_by_pattern(
+    service_name: str, pattern: str, max_matches: int = 20
+) -> str:
     """Search recent logs for a specific service matching a regex or substring.
 
     Use this tool when investigating errors or looking for specific trace IDs,
