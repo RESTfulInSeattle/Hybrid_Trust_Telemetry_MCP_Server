@@ -194,48 +194,15 @@ uv run mypy src/
 
 ## 🔌 Connecting to LLM Hosts
 
-### VS Code with Continue.dev (Standard Setup)
-Add the server configuration to `~/.continue/config.json`:
+Because the Telemetry MCP server communicates over standard input/output (`stdio`), **you do not need to start it manually**. Your MCP-compatible client will automatically spawn and manage the server process in the background.
+
+### Cline (VS Code) & Claude Desktop
+Both Cline (VS Code) and Claude Desktop use the same `mcp_settings.json` / `claude_desktop_config.json` schema. Add the following object to your configuration:
 
 ```json
 {
-  "mcpServers": [
-    {
-      "name": "TelemetryInspector",
-      "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "/Users/YOUR_MAC_USERNAME/Development/Telemetry_MCP_Server",
-        "python",
-        "src/telemetry_mcp_server/server.py"
-      ]
-    }
-  ]
-}
-```
-
-### Hybrid-Trust Dual-Profile Setup (Continue.dev)
-To enforce air-gapping between trade secrets and cloud APIs, isolate the Telemetry MCP server to a local model profile:
-
-```json
-{
-  "models": [
-    {
-      "title": "Cloud (No Telemetry Tools)",
-      "provider": "anthropic",
-      "model": "claude-3-5-sonnet-20241022",
-      "apiKey": "${ANTHROPIC_API_KEY}"
-    },
-    {
-      "title": "Local Secure (Telemetry & Trade Secrets)",
-      "provider": "ollama",
-      "model": "qwen2.5-coder:32b",
-      "apiBase": "http://192.168.1.136:11434"
-    }
-  ],
   "mcpServers": {
-    "TelemetryInspector": {
+    "telemetry-inspector": {
       "command": "uv",
       "args": [
         "run",
@@ -249,11 +216,26 @@ To enforce air-gapping between trade secrets and cloud APIs, isolate the Telemet
 }
 ```
 
-### Claude Desktop
-Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+### Hybrid-Trust Dual-Profile Setup (AI Gateway)
+To enforce air-gapping between trade secrets and cloud APIs, you can route your local IDEs through a local API Gateway (like LiteLLM). Bind the Telemetry MCP server to a local reasoning model (like Qwen 3) so proprietary logs are never transmitted to cloud endpoints:
 
 ```json
 {
+  "models": [
+    {
+      "title": "Cloud (No Telemetry Tools)",
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-20241022",
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    {
+      "title": "Local Secure (Telemetry & Trade Secrets)",
+      "provider": "openai",
+      "model": "qwen3-4b-thinking",
+      "apiBase": "http://127.0.0.1:11434/v1",
+      "apiKey": "sk-local"
+    }
+  ],
   "mcpServers": {
     "telemetry-inspector": {
       "command": "uv",
@@ -274,13 +256,12 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 When integrated into the **Local AI Distributed Coding Environment** (M5 Pro host running `vllm-mlx` and `litellm` alongside Mac and Windows 11 clients):
 
 #### Mode A: Local Client on Mac Host (Standard stdio)
-For VS Code or Continue running locally on the Mac inference host:
+For VS Code (using Cline) running locally on the Mac inference host:
 
 ```json
 {
-  "mcpServers": [
-    {
-      "name": "TelemetryInspector",
+  "mcpServers": {
+    "telemetry-inspector": {
       "command": "uv",
       "args": [
         "run",
@@ -289,29 +270,27 @@ For VS Code or Continue running locally on the Mac inference host:
         "telemetry-mcp-server"
       ]
     }
-  ]
+  }
 }
 ```
-*(Or invoke via `"args": ["run", "--directory", "...", "python", "src/telemetry_mcp_server/server.py"]`)*
 
 #### Mode B: Remote LAN Clients (Windows 11 / Remote IDEs via SSE)
-Because Windows 11 clients on the local network cannot spawn local child processes on the Mac host over stdio, run the Telemetry MCP Server as a background daemon on the Mac listening on all network interfaces via SSE:
+Because Windows 11 clients on the local network cannot spawn local child processes on the Mac host over stdio, you must run the Telemetry MCP Server as a background daemon on the Mac listening on all network interfaces via SSE:
 
 ```bash
 # On Mac Host (Terminal):
 uv run telemetry-mcp-server --transport sse --host 0.0.0.0 --port 8080
 ```
 
-Then configure your remote Windows client (VS Code / Continue.dev / Agent Harness) to connect directly to the Mac's LAN IP:
+Then configure your remote Windows client (VS Code with Cline / Agent Harness) to connect directly to the Mac's LAN IP:
 
 ```json
 {
-  "mcpServers": [
-    {
-      "name": "TelemetryInspector",
+  "mcpServers": {
+    "telemetry-inspector": {
       "url": "http://<mac_ip_address>:8080/sse"
     }
-  ]
+  }
 }
 ```
 
