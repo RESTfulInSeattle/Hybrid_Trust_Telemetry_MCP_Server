@@ -19,4 +19,5 @@ This directory contains architectural specifications and design patterns for run
 ## 🧭 System Context
 
 - For the baseline MCP 2.x protocol implementation, stdio transport, and security boundary design, see [**`../architecture.md`**](../architecture.md).
+- For the phased implementation plan and skill progression for each pattern, see [**`../roadmap.md`**](../roadmap.md).
 - For the high-level documentation map and recommended reading paths, see [**`../README.md`**](../README.md).

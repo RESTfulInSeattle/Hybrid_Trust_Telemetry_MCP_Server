@@ -1,17 +1,27 @@
 # Skill Development & Feature Roadmap
 
-This roadmap is designed for **structured skill development** and **portfolio showcasing**. Each milestone builds tangible engineering competencies in AI systems, protocol design, tool governance, and automated testing.
+This roadmap is designed for **structured skill development** and **portfolio showcasing**. Each milestone builds tangible engineering competencies in AI systems, protocol design, tool governance, automated testing, and enterprise **hybrid-trust architectures**.
 
 ---
 
 ## 🎯 Milestone Overview
 
 ```mermaid
-flowchart LR
-    M1["Phase 1:<br/>MVP Foundation"] --> M2["Phase 2:<br/>Security & Testing"]
-    M2 --> M3["Phase 3:<br/>MCP Resources & Prompts"]
-    M3 --> M4["Phase 4:<br/>Enterprise Telemetry"]
-    M4 --> M5["Phase 5:<br/>Remote SSE & Containers"]
+flowchart TD
+    subgraph CoreEngine["Core MCP Engine & Observability"]
+        M1["Phase 1:<br/>MVP Foundation"] --> M2["Phase 2:<br/>Security & Testing"]
+        M2 --> M3["Phase 3:<br/>MCP Resources & Prompts"]
+        M3 --> M4["Phase 4:<br/>Enterprise Observability"]
+        M4 --> M5["Phase 5:<br/>Remote SSE & Containers"]
+    end
+
+    subgraph HybridTrust["Hybrid-Trust Enterprise Patterns"]
+        M5 --> M6["Phase 6:<br/>Dynamic DLP (Server Layer)"]
+        M6 --> M7["Phase 7:<br/>Strict IDE Binding (Client Layer)"]
+        M7 --> M8["Phase 8:<br/>Sub-Agent Delegation (Agent Layer)"]
+        M8 --> M9["Phase 9:<br/>Gateway Router (Network Layer)"]
+        M9 --> M10["Phase 10:<br/>Enterprise E2E Verification"]
+    end
 ```
 
 ---
@@ -103,11 +113,174 @@ flowchart LR
 
 - [ ] **Docker Packaging:**
   - Build a lightweight `Dockerfile` using multi-stage `uv` builds.
+  - Support non-root container execution with read-only mounted volume for `/logs`.
 - [ ] **Server-Sent Events (SSE) Transport Mode:**
-  - Support `--transport sse` for hosting the MCP server over HTTP/HTTPS for remote agents.
+  - Expose `--transport sse` with Starlette / Uvicorn runner for remote AI agents and centralized observability gateways.
 - [ ] **Authentication & Access Control:**
-  - Basic API token validation for HTTP/SSE endpoints.
+  - Implement HTTP Bearer token validation for SSE endpoints.
+  - Map incoming tokens to client identity roles for downstream authorization.
 
 **Key Competencies Acquired:**
 - Packaging MCP servers for production Kubernetes/container environments.
-- Remote vs. local MCP architectures.
+- Remote vs. local MCP architectures and network security boundaries.
+
+---
+
+## Phase 6: Hybrid-Trust Pattern 1 — Dynamic Data Loss Prevention (DLP) at MCP Layer
+*Focus: Embedding context-aware payload redaction and PII/credential scrubbing directly into the server pipeline.*  
+*Architectural Specification:* [**`docs/architecture/dynamic_dlp_pattern.md`**](./architecture/dynamic_dlp_pattern.md) & [**`docs/architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md#2-regulated-healthcare--financial-services-hipaa--pci-dss--pii-triage)
+
+- [ ] **Core Scrubber Engine (`src/telemetry_mcp_server/dlp.py`):**
+  - Implement high-throughput regex and pattern scrubbers:
+    - **PCI-DSS / Payment Card Masking:** Match Luhn-valid PANs (`4111-XXXX-XXXX-1111`) and CVVs.
+    - **HIPAA / PII Sanitization:** Mask Social Security Numbers, patient/medical identifiers (`[PATIENT_ID_REDACTED]`), emails, and phone numbers.
+    - **Secrets & Credentials:** Strip OAuth `Bearer [TOKEN_SCRUBBED]`, AWS access keys (`AKIA[A-Z0-9]{16}`), SSH/RSA private keys, and database connection strings.
+    - **Network Topography:** Mask RFC 1918 private IPv4 addresses (`10.x.x.x`, `172.16-31.x.x`, `192.168.x.x`) and internal DNS hostnames.
+    - **Proprietary Symbol Redaction:** Redact configurable proprietary function names, algorithmic weight dumps, or trade secret markers (`[PROPRIETARY_ALGO_REDACTED]`).
+- [ ] **Context-Aware Client Origin Evaluation:**
+  - Extend server runtime to evaluate client identity and connection transport:
+    - `STRICT_LOCAL` mode: Full unredacted telemetry permitted over trusted local `stdio` under local audit logging.
+    - `REDACTED_CLOUD` mode: Enforces zero-leak redaction for cloud-hosted agent harnesses and remote SSE callers.
+    - `AUDIT_ONLY` mode: Shadow evaluation mode logging what would have been redacted without modifying outputs.
+- [ ] **MCP Pipeline Decorators & Resource Filtering:**
+  - Apply DLP middleware seamlessly across tool returns (`read_recent_errors`, `search_logs_by_pattern`, `get_system_health`).
+  - Apply DLP stream filtering to MCP resources (`telemetry://logs/{service}`, `telemetry://health`).
+- [ ] **Redaction Telemetry & Audit Logging:**
+  - Record audit events (patterns masked, counts by category, caller context) without leaking raw sensitive strings.
+- [ ] **Automated Test Suite (`tests/test_dlp.py`):**
+  - Unit tests for all masking rules (credit cards, JWTs, IPs, PII).
+  - Negative security verification: Ensure zero secret leakage under simulated cloud client headers.
+
+**Key Competencies Acquired:**
+- Real-time payload sanitization and high-performance regex stream filtering.
+- Context-aware data governance at the MCP protocol boundary.
+- Compliance engineering for AI systems (HIPAA Privacy Rules, PCI-DSS Requirement 3).
+
+---
+
+## Phase 7: Hybrid-Trust Pattern 2 — Strict IDE Profile Binding & Workspace Air-Gapping
+*Focus: Enforcing UI- and configuration-level air-gapping within IDE extensions to isolate sensitive MCP servers.*  
+*Architectural Specification:* [**`docs/architecture/strict_ide_profile_binding.md`**](./architecture/strict_ide_profile_binding.md) & [**`docs/architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md#3-air-gapped-core-ip--defense-systems-zero-cloud-telemetry)
+
+- [ ] **Continue.dev Dual-Profile Reference Configuration:**
+  - Provide tested reference configurations (`examples/continue_config.json`):
+    - **Cloud Profile ("Cloud - General Engineering"):** Bound to Claude 3.5 Sonnet / GPT-4o. Public tools only (git, web search); `TelemetryInspector` is completely excluded from tool schemas.
+    - **Local Profile ("Local - Secure Telemetry"):** Bound exclusively to local inference engines (Ollama / `llama.cpp` on `http://localhost:11434` or local LAN `192.168.1.136`). `TelemetryInspector` is attached via `stdio`.
+- [ ] **Cursor & VS Code Multi-Profile Templates:**
+  - Provide `.cursor/mcp.json` and `.vscode/settings.json` workspace templates isolating tool sets per development profile.
+- [ ] **Configuration Validation Script (`scripts/verify_ide_isolation.py`):**
+  - Implement a pre-flight linting script that inspects developer IDE configuration files:
+    - Scans for inadvertent binding of sensitive MCP servers to external API keys or cloud models.
+    - Returns actionable exit codes and remediation steps for CI or pre-commit hooks.
+- [ ] **Zero-Egress Network Verification:**
+  - Document network packet inspection runbook (using `lsof` / Wireshark) verifying zero outbound WAN traffic during local diagnostic sessions.
+- [ ] **Developer Guide & Runbook:**
+  - Author [**`docs/tutorials/ide_profile_binding_setup.md`**](./tutorials/building_your_first_mcp_server.md) covering setup, profile switching shortcuts, and security guarantees.
+
+**Key Competencies Acquired:**
+- Workspace-level security air-gapping and zero-trust developer ergonomics.
+- Defense against Confused Deputy attacks at the IDE client interface.
+- Automated security linting of agent configuration files.
+
+---
+
+## Phase 8: Hybrid-Trust Pattern 3 — Sub-Agent Delegation Model (Multi-Agent Orchestration)
+*Focus: Constructing a two-tier agent hierarchy where a frontier model delegates raw telemetry analysis to a local model.*  
+*Architectural Specification:* [**`docs/architecture/sub_agent_delegation_pattern.md`**](./architecture/sub_agent_delegation_pattern.md) & [**`docs/architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md#1-proprietary-algorithm--high-frequency-trading-hft-incident-diagnosis)
+
+- [ ] **Two-Tier Agent Architecture Design:**
+  - **Tier 1 (Frontier Project Manager):** Cloud model (Claude 3.5 Sonnet) responsible for overall system reasoning, code generation, and test creation. Network-isolated from internal telemetry.
+  - **Tier 2 (Local Diagnostic Sub-Agent):** On-premise model (Qwen 2.5 32B Coder via Ollama or `llama.cpp`) connected to `TelemetryInspector` via `stdio`.
+- [ ] **Delegation Tool Interface (`src/telemetry_mcp_server/tools/delegation.py`):**
+  - Implement `delegate_telemetry_investigation(service_name: str, issue_description: str, max_summary_tokens: int = 400) -> str`.
+  - Tool description engineered to guide the frontier planner to hand off telemetry diagnostics rather than requesting raw logs.
+- [ ] **Local Sub-Agent Triage Prompt Template (`src/telemetry_mcp_server/prompts/delegation.py`):**
+  - Orchestrate local sub-agent steps:
+    1. Invoke `get_system_health()` and `read_recent_errors(service_name)`.
+    2. Analyze proprietary stack traces and internal memory/concurrency faults.
+    3. Abstract proprietary business logic and private symbols into generic computer science concepts.
+    4. Enforce strict output token budgeting (< 500 tokens) to prevent cloud context pollution.
+- [ ] **End-to-End Orchestration Harness (`scripts/run_sub_agent_delegation.py`):**
+  - Standalone runnable script executing the two-tier flow:
+    - Dispatches user prompt to frontier client harness.
+    - Intercepts delegation tool call and triggers local sub-agent inference.
+    - Ingests sanitized local summary and completes root-cause remediation with frontier model.
+- [ ] **Delegation Test Suite (`tests/test_sub_agent_delegation.py`):**
+  - Unit tests with mock local LLM responses verifying proprietary algorithms are stripped before reaching frontier context.
+
+**Key Competencies Acquired:**
+- Multi-agent orchestration and hierarchical delegation design.
+- Context window optimization and token cost reduction in agentic loops.
+- Intellectual property isolation via agentic synthesis and semantic abstraction.
+
+---
+
+## Phase 9: Hybrid-Trust Pattern 4 — AI Gateway Router (Tool-Triggered Model Swapping)
+*Focus: Intercepting JSON-RPC tool calls at the network proxy layer to dynamically route sensitive requests to local models.*  
+*Architectural Specification:* [**`docs/architecture/gateway_router_pattern.md`**](./architecture/gateway_router_pattern.md) & [**`docs/architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md#4-automated-incident-routing--model-swapping-via-ai-gateway)
+
+- [ ] **LiteLLM Gateway Configuration (`config/litellm_config.yaml`):**
+  - Define multi-model upstream targets:
+    - `frontier-reasoning`: Points to Anthropic Claude 3.5 Sonnet / OpenAI GPT-4o.
+    - `local-secure`: Points to local Ollama / `llama.cpp` instance (e.g., `http://192.168.1.136:11434/v1`).
+- [ ] **Tool-Name Routing Rules Engine:**
+  - Configure tool inspection rules:
+    - Requests containing sensitive MCP tools (`read_recent_errors`, `get_system_health`, `search_logs_by_pattern`) route dynamically to `local-secure`.
+    - Non-telemetry prompts and public tools route to `frontier-reasoning`.
+- [ ] **Lightweight Gateway Proxy Prototype (`scripts/gateway_proxy.py`):**
+  - Standalone FastAPI/Starlette proxy demonstrating JSON-RPC payload inspection:
+    - Parses incoming OpenAI-compatible `/v1/chat/completions` requests.
+    - Evaluates `tools` and `messages` for telemetry tool calls.
+    - Transparently routes to local inference vs cloud endpoint based on tool classification.
+- [ ] **Fail-Closed Security Guarantees:**
+  - Implement fail-closed exception handling: If the local secure endpoint is unreachable, restricted tool calls abort with a clean error message rather than failing open to cloud providers.
+- [ ] **Gateway Audit Logging & Metrics:**
+  - Track route diversion metrics: Tool invocations diverted to local vs. cloud, latency distributions, and token savings.
+- [ ] **Automated Gateway Tests (`tests/test_gateway_router.py`):**
+  - Integration tests verifying tool call interception, dynamic routing, and fail-closed behavior.
+
+**Key Competencies Acquired:**
+- AI Gateway reverse proxy design and JSON-RPC payload interception.
+- Policy-driven model routing and infrastructure-level cost governance.
+- Fail-closed security architecture for agent tool execution.
+
+---
+
+## Phase 10: Enterprise Hybrid-Trust Verification & Live Showcase
+*Focus: End-to-end integration across all 4 tiers, threat defense verification suite, and portfolio demonstration runbook.*  
+*Architectural Specification:* [**`docs/architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md) & [**`docs/runbooks/showcase_runbook.md`**](./runbooks/showcase_runbook.md)
+
+- [ ] **End-to-End Enterprise Scenario Datasets:**
+  - **Scenario A (HFT Quant Trading):** Simulated race condition in proprietary lock-free order book (`logs/matching_engine.log`).
+  - **Scenario B (Healthcare/FinTech):** Simulated payment gateway deadlock with embedded PANs and patient tokens (`logs/payment.log`, `logs/ehr.log`).
+- [ ] **Adversarial Threat Defense Test Suite (`tests/test_hybrid_trust_threats.py`):**
+  - Regression testing across the 4 hybrid-trust defense layers:
+    1. *Indirect Prompt Injection Defense:* Malicious log instructions cannot trigger unauthorized cloud egress.
+    2. *Trade Secret Exfiltration Defense:* Zero proprietary code strings leak beyond localhost boundaries.
+    3. *Regulatory Compliance Verification:* Zero PAN/PHI tokens present in cloud-bound payloads.
+    4. *Context Window Blowout Prevention:* Verifying tail bounded limits and sub-agent brief token caps (< 500 tokens).
+- [ ] **Benchmarking & Cost Analysis Report (`docs/architecture/hybrid_trust_benchmark.md`):**
+  - Measure token reduction (cloud vs. local sub-agent) and latency trade-offs across all 4 patterns.
+- [ ] **Showcase Runbook Updates (`docs/runbooks/showcase_runbook.md`):**
+  - Add 5-minute interactive demonstration script walking through:
+    1. Live incident trigger via `scripts/simulate_incident.py`.
+    2. Dynamic DLP scrubbing demonstration in MCP inspector.
+    3. Sub-agent delegation and sanitized RCA presentation.
+    4. Gateway model swapping verification.
+
+**Key Competencies Acquired:**
+- Enterprise-grade defense-in-depth auditing for LLM and agentic systems.
+- Quantitative benchmarking of hybrid-trust AI architectures.
+- High-impact technical interview storytelling and executive presentation skills.
+
+---
+
+## 📊 Hybrid-Trust Architectural Tier Summary
+
+| Phase | Pattern | Architectural Tier | Primary Protection Target | Primary Deliverable |
+| :--- | :--- | :--- | :--- | :--- |
+| **Phase 6** | [**Dynamic DLP**](./architecture/dynamic_dlp_pattern.md) | **Server Layer** (`MCPServer`) | PII, API Keys, Tokens, IPs | `src/telemetry_mcp_server/dlp.py` |
+| **Phase 7** | [**Strict IDE Binding**](./architecture/strict_ide_profile_binding.md) | **Client / IDE Layer** | Air-gapped environments, ITAR | `examples/continue_config.json`, `verify_ide_isolation.py` |
+| **Phase 8** | [**Sub-Agent Delegation**](./architecture/sub_agent_delegation_pattern.md) | **Agent Orchestration Layer** | Algorithmic IP, Trade Secrets | `tools/delegation.py`, `run_sub_agent_delegation.py` |
+| **Phase 9** | [**Gateway Router**](./architecture/gateway_router_pattern.md) | **Network Proxy Layer** | Enterprise fleets, Cost optimization | `config/litellm_config.yaml`, `gateway_proxy.py` |
+| **Phase 10** | [**Enterprise Showcase**](./architecture/hybrid_trust_use_cases.md) | **End-to-End System** | Defense-in-depth, Threat validation | `tests/test_hybrid_trust_threats.py`, Demo Runbook |
