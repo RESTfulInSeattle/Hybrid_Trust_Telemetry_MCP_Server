@@ -1,0 +1,45 @@
+{
+  "$schema": "https://continue.dev/schemas/config.json",
+  "models": [
+    {
+      "title": "Cloud - General Engineering (No Internal Telemetry)",
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-20241022",
+      "apiKey": "${ANTHROPIC_API_KEY}",
+      "description": "High-level architecture, code generation, and public library synthesis. Internal Telemetry MCP is excluded."
+    },
+    {
+      "title": "Local - Secure Telemetry & Trade Secrets (Zero Cloud Egress)",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:32b",
+      "apiBase": "http://localhost:11434",
+      "description": "Air-gapped local model for analyzing internal telemetry, trade secrets, and proprietary stack traces."
+    }
+  ],
+  "mcpServers": {
+    "telemetry-inspector-secure": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/clayton/Development/Telemetry_MCP_Server",
+        "python",
+        "-m",
+        "telemetry_mcp_server.server"
+      ],
+      "env": {
+        "TELEMETRY_LOG_DIR": "/Users/clayton/Development/Telemetry_MCP_Server/logs",
+        "SECURITY_MODE": "STRICT_LOCAL",
+        "TELEMETRY_DLP_ENABLED": "true"
+      }
+    }
+  },
+  "docs": [],
+  "customCommands": [
+    {
+      "name": "triage-incident",
+      "prompt": "Call `get_security_posture()` and `get_system_health()`, then delegate investigation of the affected service using `delegate_telemetry_investigation`.",
+      "description": "Execute governed hybrid-trust incident triage"
+    }
+  ]
+}
