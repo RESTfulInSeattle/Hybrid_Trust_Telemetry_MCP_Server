@@ -132,7 +132,7 @@ flowchart LR
 | ⚙️ [**Strict IDE Profile Binding**](./docs/architecture/strict_ide_profile_binding.md) | Air-gapping MCP servers strictly to local model profiles in Continue.dev / VS Code. | Air-gapped environments, defense systems (ITAR), and zero-cloud compliance. |
 | 🔀 [**Gateway Router Pattern**](./docs/architecture/gateway_router_pattern.md) | AI Gateway (LiteLLM) dynamically swaps models based on tool sensitivity. | Enterprise developer fleets requiring automated model switching. |
 
-👉 *For deep-dive use cases (HFT algorithmic trading, HIPAA/PCI compliance, air-gapped systems), threat modeling, and reference configs, see the [**Hybrid-Trust Architecture & Use Cases Guide**](./docs/architecture/hybrid_trust_use_cases.md).*
+👉 *For pattern selection flowcharts, 4-layer defense architecture, threat modeling, and deep-dive use cases (HFT quantitative trading, HIPAA/PCI-DSS, air-gapped defense), explore the [**Architecture & Hybrid-Trust Hub**](./docs/architecture/README.md) and [**Enterprise Use Cases Guide**](./docs/architecture/hybrid_trust_use_cases.md).*
 
 ---
 

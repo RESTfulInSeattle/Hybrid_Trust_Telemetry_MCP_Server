@@ -58,6 +58,16 @@ docs/
 3. Check [**`roadmap.md`**](./roadmap.md) to pick up the next milestone task.
 4. Adhere to [**`AGENTS.md`**](../AGENTS.md) for tool implementation protocols and verification gates.
 
+### 3. 🛡️ Enterprise Architect / Security Lead (Hybrid-Trust Architecture)
+1. Start at [**`architecture/README.md`**](./architecture/README.md) for the 4-layer defense-in-depth model and architectural selection flowchart.
+2. Review [**`architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md) for industry threat modeling (quant finance, HIPAA/PCI, air-gapped defense).
+3. Explore the dedicated pattern specifications:
+   - [**Dynamic DLP Pattern**](./architecture/dynamic_dlp_pattern.md) (MCP middleware)
+   - [**Sub-Agent Delegation Pattern**](./architecture/sub_agent_delegation_pattern.md) (Two-tier agent hierarchy)
+   - [**Strict IDE Profile Binding**](./architecture/strict_ide_profile_binding.md) (Client air-gapping)
+   - [**Gateway Router Pattern**](./architecture/gateway_router_pattern.md) (Proxy model swapping)
+4. Audit reference configurations in [**`examples/continue_config.json`**](../examples/continue_config.json) and test pre-flight governance using `python scripts/verify_ide_isolation.py`.
+
 ---
 
 ## ✍️ Documentation Guidelines
