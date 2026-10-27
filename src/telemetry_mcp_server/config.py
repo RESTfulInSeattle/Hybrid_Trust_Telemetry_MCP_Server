@@ -1,7 +1,7 @@
 """Configuration module for Telemetry MCP Server.
 
 Provides environment-based configuration for log directory paths, line bounding limits,
-and server transport options.
+server transport options, and hybrid-trust security settings.
 """
 
 import os
@@ -36,6 +36,23 @@ class Settings:
     default_host: str = field(default_factory=lambda: os.getenv("MCP_HOST", "0.0.0.0"))
     default_port: int = field(
         default_factory=lambda: int(os.getenv("MCP_PORT", "8080"))
+    )
+
+    # Hybrid-Trust Security Settings
+    # Modes: STRICT_LOCAL (trusted, no redaction), REDACTED_CLOUD (enforce DLP redaction), AUDIT_ONLY (log redactions)
+    security_mode: str = field(
+        default_factory=lambda: os.getenv("SECURITY_MODE", "STRICT_LOCAL").upper()
+    )
+    dlp_enabled: bool = field(
+        default_factory=lambda: (
+            os.getenv("TELEMETRY_DLP_ENABLED", "true").lower() in ("true", "1", "yes")
+        )
+    )
+    local_llm_url: str = field(
+        default_factory=lambda: os.getenv("LOCAL_LLM_URL", "http://localhost:11434")
+    )
+    local_llm_model: str = field(
+        default_factory=lambda: os.getenv("LOCAL_LLM_MODEL", "qwen2.5-coder:32b")
     )
 
     def ensure_log_dir_exists(self) -> None:
