@@ -11,6 +11,7 @@ Our documentation follows structured documentation principles (inspired by the [
 | Category | Document | Audience & Purpose |
 | :--- | :--- | :--- |
 | **Architecture & Reference** | [**`architecture.md`**](./architecture.md) | **Systems Engineers & Architects:** MCP 2.x protocol specification, stdio transport, JSON-RPC 2.0 message flows, security isolation, and data flow diagrams. |
+| **Agent Tool Reference** | [**`tools_reference.md`**](./tools_reference.md) | **AI Engineers & Agent Authors:** Exhaustive specification, schemas, arguments, and security guardrails for all callable MCP diagnostic tools. |
 | **Hybrid-Trust Architecture** | [**`architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md) | **Enterprise Architects & Security Teams:** Protecting trade secrets and sensitive telemetry using local models alongside cloud frontier models. |
 | **Architectural Patterns** | [**`architecture/README.md`**](./architecture/README.md) | **Designers & Implementers:** Modular patterns (Dynamic DLP, Sub-Agent Delegation, Strict IDE Profiles, Gateway Router). |
 | **Roadmap & Strategy** | [**`roadmap.md`**](./roadmap.md) | **Engineers & Hiring Leads:** 10-phase skill development curriculum and feature progression from MVP to Enterprise Hybrid-Trust Architectures. |
@@ -26,6 +27,7 @@ Our documentation follows structured documentation principles (inspired by the [
 docs/
 ├── README.md                              # This documentation hub & index
 ├── architecture.md                        # MCP 2.x architecture, protocol mechanics & security
+├── tools_reference.md                     # Exhaustive Agent MCP tool catalog & schema specification
 ├── architecture/                          # Hybrid-Trust architecture patterns & use cases
 │   ├── README.md                          # Architecture directory navigation
 │   ├── hybrid_trust_use_cases.md          # Enterprise use cases for trade-secret protection
