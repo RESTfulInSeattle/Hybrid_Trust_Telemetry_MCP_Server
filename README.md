@@ -1,12 +1,15 @@
-# Telemetry MCP Server: Governed Observability for AI Agents
+# Telemetry MCP Server: Governed Observability & Hybrid-Trust Architecture
 
 [![Model Context Protocol](https://img.shields.io/badge/Protocol-MCP%202.x-blue.svg)](https://modelcontextprotocol.io/)
-[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/)
 [![Package Manager](https://img.shields.io/badge/Package%20Manager-uv-brightgreen.svg)](https://docs.astral.sh/uv/)
-[![SDK](https://img.shields.io/badge/Framework-MCPServer%20(FastMCP)-purple.svg)](https://github.com/modelcontextprotocol/python-sdk)
+[![SDK](https://img.shields.io/badge/Framework-MCPServer%20(MCP%20SDK%202.x)-purple.svg)](https://github.com/modelcontextprotocol/python-sdk)
 [![Code Style](https://img.shields.io/badge/Code%20Style-Ruff-black.svg)](https://github.com/astral-sh/ruff)
+[![Type Checking](https://img.shields.io/badge/Type%20Checking-Mypy%20Strict-blue.svg)](https://mypy-lang.org/)
+[![Test Suite](https://img.shields.io/badge/Tests-9%20Suites%20Passing-brightgreen.svg)](https://pytest.org/)
+[![Security](https://img.shields.io/badge/Security-Hybrid--Trust%20DLP-darkgreen.svg)](#-hybrid-trust-architecture-protecting-trade-secrets)
 
-> **A production-ready Model Context Protocol (MCP) server providing governed, secure application telemetry, system health probes, and log diagnostics to AI models.**
+> **A production-ready Model Context Protocol (MCP) server providing governed application telemetry, system health probes, and log diagnostics to AI agents—featuring an enterprise Hybrid-Trust Architecture to protect trade secrets and sensitive customer data.**
 
 ---
 
@@ -15,43 +18,47 @@
 When integrating Large Language Models (LLMs) into SRE, DevOps, or diagnostic workflows, developers face a critical security choice:
 
 ```
-┌────────────────────────────────────────────────────────┐
-│  ❌ THE UNSAFE PATTERN: Raw Shell Access                │
-│  LLM  ──>  bash / zsh  ──>  cat / rm / curl / arbitrary │
-│  Risk: Prompt injection can wipe drives or exfiltrate  │
-└────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│  ❌ THE UNSAFE PATTERN: Raw Shell Access                               │
+│  LLM  ──>  bash / zsh  ──>  cat / rm / curl / arbitrary terminal       │
+│  Risk: Prompt injection can wipe drives, drop databases, or exfiltrate  │
+│         confidential keys and source code.                             │
+└────────────────────────────────────────────────────────────────────────┘
 
-┌────────────────────────────────────────────────────────┐
-│  ✅ THE GOVERNED PATTERN: Model Context Protocol (MCP)  │
-│  LLM  ──>  JSON-RPC 2.0  ──>  Telemetry MCP Server     │
-│                              ├── get_system_health()   │
-│                              └── read_recent_errors()  │
-│  Benefit: Strict API boundaries, path-traversal guards,│
-│           bounded context windows, audit logging.       │
-└────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│  ✅ THE GOVERNED PATTERN: Model Context Protocol (MCP)                 │
+│  LLM  ──>  JSON-RPC 2.0  ──>  Telemetry MCP Server                    │
+│                              ├── get_system_health()                  │
+│                              ├── read_recent_errors()                 │
+│                              ├── filter_logs()                        │
+│                              └── delegate_telemetry_investigation()   │
+│  Benefit: Strict API boundaries, path-traversal containment, bounded  │
+│           context windows, and automated compliance scrubbing.        │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-Instead of granting raw terminal access, the **Telemetry MCP Server** acts as a strictly bounded, observable API layer. The AI agent can diagnose issues autonomously while system administrators retain full control over data access and execution safety.
+Instead of granting raw terminal access, the **Telemetry MCP Server** acts as a strictly bounded, observable API layer. The AI agent can diagnose issues autonomously while system administrators retain full control over data access, payload redaction, and execution safety.
 
 ---
 
 ## 🏗️ Architecture Overview
 
-The server communicates with client applications (Continue.dev, Claude Desktop, Cursor, or custom agent runtimes) over **standard input/output (stdio)** using the open **Model Context Protocol (JSON-RPC 2.0)**.
+The server communicates with client applications (Continue.dev, Claude Desktop, Cursor, or custom agent runtimes) over **standard input/output (`stdio`)** using the open **Model Context Protocol (JSON-RPC 2.0)**.
 
 ```mermaid
 flowchart LR
-    subgraph Host["Host Environment (e.g., VS Code / Continue)"]
-        User["Developer / Operator"]
-        LLM["AI Model (Claude / Qwen / GPT-4)"]
+    subgraph Host["Host Environment (e.g., VS Code / Continue / Claude Desktop)"]
+        User["Developer / SRE"]
+        LLM["AI Model (Claude 3.5 / Qwen 2.5 / GPT-4o)"]
         Client["MCP Client Engine"]
     end
 
-    subgraph Server["Telemetry MCP Server (Python MCPServer / MCP 2.x)"]
-        RPC["JSON-RPC 2.0 Router (stdio)"]
-        Sec["Security & Path Boundary Guards"]
+    subgraph Server["Telemetry MCP Server (Python MCPServer / MCP SDK 2.x)"]
+        RPC["JSON-RPC 2.0 Router (stdio / SSE)"]
+        Sec["Security & Path Traversal Guards"]
+        DLP["Dynamic DLP Sanitization Engine"]
         
-        subgraph Tools["Exposed MCP Tools"]
+        subgraph Tools["Diagnostic & Hybrid-Trust Tools"]
             T1["get_system_health()"]
             T2["read_recent_errors(service, lines)"]
             T3["search_logs_by_pattern(service, query)"]
@@ -68,24 +75,30 @@ flowchart LR
             R3["telemetry://services"]
             R4["telemetry://logs/{service}"]
         end
+
+        subgraph Prompts["MCP Prompts"]
+            P1["incident_triage"]
+            P2["hybrid_trust_triage"]
+        end
     end
 
     subgraph Data["Telemetry Storage"]
         Logs["Service Logs (/logs/*.log)"]
-        Metrics["Mock / Real Metric Providers"]
+        Metrics["Real / Mock Metric Probes"]
     end
 
-    User -->|"Prompt: Why is auth failing?"| LLM
-    LLM -->|"Call: read_recent_errors('auth')"| Client
+    User -->|"Prompt: Investigate checkout failure"| LLM
+    LLM -->|"Call: delegate_telemetry_investigation('payment')"| Client
     Client <-->|"JSON-RPC over stdio"| RPC
     RPC --> Sec
     Sec --> Tools
     Sec --> Resources
-    Tools --> Logs
-    Tools --> Metrics
-    RPC -->|"Structured Error/Log Context"| Client
-    Client -->|"Synthesized Diagnosis"| LLM
-    LLM -->|"Root Cause: Redis timeout"| User
+    Tools --> DLP
+    DLP --> Logs
+    DLP --> Metrics
+    RPC -->|"Sanitized Brief (<400 tokens)"| Client
+    Client -->|"Clean Context"| LLM
+    LLM -->|"Remediation Plan"| User
 ```
 
 ---
@@ -94,25 +107,22 @@ flowchart LR
 
 While MCP enforces governed API boundaries, enterprise deployments face a critical challenge: **how can teams leverage the reasoning power of frontier cloud models (Claude 3.5 Sonnet, GPT-4o) without exposing trade secrets embedded in application telemetry?**
 
-Real-world production logs frequently contain proprietary algorithm parameters, internal infrastructure topologies (RFC 1918 IPs), and regulated customer data (PII/PCI/HIPAA). Transmitting raw logs to cloud APIs introduces significant IP exfiltration, training ingestion, and compliance risks.
+Production logs frequently contain proprietary algorithm parameters, internal infrastructure topologies (RFC 1918 IPs), and regulated customer data (PII/PCI/HIPAA). Transmitting raw logs to cloud APIs introduces significant IP exfiltration, training ingestion, and compliance risks.
 
-The **Hybrid-Trust Architecture** eliminates this dilemma by establishing two distinct operational trust zones:
-
-1. **Zero-Egress Zone (Local Trust Tier):** A local on-premise model (e.g., Qwen 2.5 32B or Llama 3 via Ollama / `llama.cpp` on an Apple Silicon Mac Studio or private LAN) connects directly to the Telemetry MCP Server. It inspects raw logs, parses proprietary stack traces, and analyzes internal telemetry entirely behind the firewall.
-2. **General Egress Zone (Frontier Tier):** Frontier cloud models receive only **sanitized summaries, abstract computer science problems, or scrubbed metrics**, allowing them to generate high-level architectural proposals, complex code refactorings, and pull requests without ever seeing raw trade secrets.
+The **Hybrid-Trust Architecture** solves this by establishing two distinct operational trust zones:
 
 ```mermaid
 flowchart LR
-    subgraph Cloud["🌐 Frontier Cloud Zone (General Egress)"]
-        Frontier["Frontier Cloud Model<br/>(Claude 3.5 Sonnet / GPT-4o)<br/><i>Architectural synthesis & refactoring</i>"]
+    subgraph Cloud["🌐 Frontier Cloud Zone (General Egress Tier)"]
+        Frontier["Frontier Cloud Model<br/>(Claude 3.5 Sonnet / GPT-4o)<br/><i>High-level reasoning, planning & refactoring</i>"]
     end
 
     subgraph Boundary["🛡️ Governed Trust Boundary"]
-        Router["AI Gateway / Sanitizer Broker<br/>(LiteLLM / Sub-Agent Relay)"]
+        Router["AI Gateway / Sanitizer Broker<br/>(LiteLLM / Sub-Agent Relay / DLP)"]
     end
 
     subgraph Local["🔒 Local Zero-Egress Zone (On-Premise / LAN)"]
-        LocalModel["Local Model<br/>(Qwen 2.5 / Llama 3 via Ollama)<br/><i>Raw telemetry & proprietary logic</i>"]
+        LocalModel["Local Diagnostic Model<br/>(Qwen 2.5 Coder via Ollama / llama.cpp)<br/><i>Inspects raw telemetry & proprietary logic</i>"]
         MCP["Telemetry MCP Server<br/>(MCPServer stdio / SSE)"]
         Logs[("Proprietary Logs<br/>& Trade Secret Telemetry")]
     end
@@ -123,35 +133,112 @@ flowchart LR
     MCP <-->|"Bounded file reads"| Logs
 ```
 
-### 📐 Supported Hybrid-Trust Patterns
+### 📐 Supported Hybrid-Trust Design Patterns
 
-| Pattern | Mechanism | Best Used For |
-| :--- | :--- | :--- |
-| 🛡️ [**Dynamic DLP at MCP Layer**](./docs/architecture/dynamic_dlp_pattern.md) | In-server context-aware redaction evaluating client identity and network origin. | Scrubbing PII, tokens, and internal IPs before delivery to external agents. |
-| 🤝 [**Sub-Agent Delegation**](./docs/architecture/sub_agent_delegation_pattern.md) | Frontier cloud model prompts a local sub-agent to inspect raw logs and return a summary. | Proprietary trading algorithms, quantitative models, and core IP. |
-| ⚙️ [**Strict IDE Profile Binding**](./docs/architecture/strict_ide_profile_binding.md) | Air-gapping MCP servers strictly to local model profiles in Continue.dev / VS Code. | Air-gapped environments, defense systems (ITAR), and zero-cloud compliance. |
-| 🔀 [**Gateway Router Pattern**](./docs/architecture/gateway_router_pattern.md) | AI Gateway (LiteLLM) dynamically swaps models based on tool sensitivity. | Enterprise developer fleets requiring automated model switching. |
+| Pattern | Architectural Layer | Primary Protection Target | Developer Friction | Implementation Status |
+| :--- | :--- | :--- | :--- | :--- |
+| 🛡️ [**Dynamic DLP at MCP Layer**](./docs/architecture/dynamic_dlp_pattern.md) | MCP Server Middleware | PCI-DSS cardholder data (Luhn-checked), HIPAA PII, JWTs, RFC 1918 IPs | **Zero** (Completely Transparent) | **Implemented & Verified** |
+| 🤝 [**Sub-Agent Delegation**](./docs/architecture/sub_agent_delegation_pattern.md) | Agent Orchestration | Core proprietary algorithms, quantitative trading weights, ring buffers | Low (Handled by Primary Agent) | **Implemented & Verified** |
+| ⚙️ [**Strict IDE Profile Binding**](./docs/architecture/strict_ide_profile_binding.md) | Client Extension (Continue / VS Code) | Air-gapped defense (ITAR), accidental cloud tool exposure | Low-Medium (Profile Switch) | **Implemented & Verified** |
+| 🔀 [**Gateway Router Pattern**](./docs/architecture/gateway_router_pattern.md) | Network Proxy (LiteLLM) | Enterprise developer fleets, dynamic token arbitrage, unified audit trails | **Zero** (Automated at Network Layer) | **Architected & Specified** |
 
 👉 *For pattern selection flowcharts, 4-layer defense architecture, threat modeling, and deep-dive use cases (HFT quantitative trading, HIPAA/PCI-DSS, air-gapped defense), explore the [**Architecture & Hybrid-Trust Hub**](./docs/architecture/README.md) and [**Enterprise Use Cases Guide**](./docs/architecture/hybrid_trust_use_cases.md).*
 
 ---
 
-## 🚀 Key Features
+## 🧰 Implemented Tool & Capability Matrix
 
-- 🛡️ **Defense-in-Depth Path Traversal Protection:** Validates every file access against directory traversal attacks (`../`, symlinks, null-byte injections).
-- 🔒 **Hybrid-Trust & Trade Secret Defense:** Architectural patterns for pairing local on-premise models (zero cloud egress) with frontier models, preventing proprietary log leakage.
-- 📊 **Context-Budget Aware:** Automatically clamps log output to prevent context window explosion or token exhaustion.
-- ⚡ **High-Performance Python Tooling:** Built on Python 3.11+ and packaged with Astral's `uv` for instantaneous dependency resolution.
-- 🔄 **Modern MCP 2.x Native:** Uses the official Anthropic MCP 2.x `MCPServer` architecture with full backwards conceptual compatibility with FastMCP.
-- 🧪 **First-Class Testing & Verification:** Includes comprehensive test suites for happy paths, negative boundaries, and edge cases.
-- 🤖 **AI-First Specification (`AGENTS.md`):** Designed from day one to be developed, maintained, and extended by autonomous AI coding agents.
+The server exposes a complete diagnostic and telemetry governance toolkit:
+
+### 1. Diagnostic Tools
+- [`get_system_health()`](./docs/tools_reference.md#21-get_system_health): Returns aggregated platform health metrics, active service counts, error rates, and system-wide alert levels.
+- [`list_available_services()`](./docs/tools_reference.md#22-list_available_services): Discovers and enumerates monitored application services available in the telemetry root directory.
+- [`read_recent_errors(service_name, lines)`](./docs/tools_reference.md#23-read_recent_errors): Bounded tail of error logs for an affected service, protected by strict path-traversal sanitization.
+- [`search_logs_by_pattern(service_name, pattern, max_matches)`](./docs/tools_reference.md#24-search_logs_by_pattern): High-performance regex and substring search for pinpointing trace IDs, status codes, or exception classes.
+- [`filter_logs(service_name, level, start_time, lines)`](./docs/tools_reference.md#25-filter_logs): Structured log parser filtering by severity (`CRITICAL`, `ERROR`, `WARNING`, `INFO`) and ISO 8601 timestamps.
+
+### 2. Hybrid-Trust & Security Governance Tools
+- [`delegate_telemetry_investigation(service_name, issue_description, max_summary_tokens)`](./docs/tools_reference.md#26-delegate_telemetry_investigation): Multi-tier sub-agent delegation tool. Queries local Ollama or OpenAI-compatible endpoints with heuristic fallback to produce an abstract, trade-secret-free incident brief (< 400 tokens).
+- [`get_security_posture()`](./docs/tools_reference.md#27-get_security_posture): Reports active security mode (`STRICT_LOCAL`, `REDACTED_CLOUD`, `AUDIT_ONLY`), trust zone, and cumulative DLP redaction metrics.
+- [`sanitize_telemetry_payload(payload, mode)`](./docs/tools_reference.md#28-sanitize_telemetry_payload): Programmatic sanitization utility applying Luhn-checked PAN masking, HIPAA scrubbing, token redaction, and IP masking.
+
+### 3. MCP Resources & Prompts
+- **Resources:** `telemetry://health` (system metrics), `telemetry://security` (security posture), `telemetry://services` (service directory), `telemetry://logs/{service}` (live stream).
+- **Prompts:** `incident_triage(service_name, incident_id)` (guided 3-step investigation) and `hybrid_trust_triage(service_name, issue_description)` (governed local delegation and cloud escalation).
+
+---
+
+## 🛠️ Operational Tooling & Scripts
+
+Beyond the MCP server itself, the repository provides production tooling for testing, simulation, and governance:
+
+1. **Synthetic Incident Generator (`scripts/simulate_incident.py`):**
+   - Continuously injects realistic multi-service faults (Redis timeouts, database deadlocks, memory leaks, and HFT race conditions) into mock log files.
+   - Supports continuous mode, timed runs, and instant burst testing.
+   ```bash
+   python scripts/simulate_incident.py --burst 15 --scenario all
+   ```
+
+2. **Pre-Flight IDE Configuration Linter (`scripts/verify_ide_isolation.py`):**
+   - Lints Continue.dev, VS Code, and Cursor configuration files.
+   - Verifies air-gapping: ensures sensitive internal MCP servers are never bound to external cloud models without DLP protection.
+   ```bash
+   python scripts/verify_ide_isolation.py --config examples/continue_config.json
+   ```
+
+3. **Production Continue.dev Reference Config (`examples/continue_config.json`):**
+   - Turnkey dual-profile setup pairing Claude 3.5 Sonnet (general engineering) with local Qwen 2.5 Coder on Ollama (secure telemetry).
+
+---
+
+## 🗺️ Project Roadmap & Current Status
+
+The project follows a 10-phase skill development curriculum spanning core protocol implementation, security hardening, enterprise observability, and hybrid-trust architectures.
+
+```mermaid
+flowchart TD
+    subgraph Completed["✅ Completed & Verified"]
+        M1["Phase 1:<br/>MVP Foundation"]
+        M2["Phase 2:<br/>Security & Testing"]
+        M3["Phase 3:<br/>MCP Resources & Prompts"]
+        M4["Phase 4:<br/>Enterprise Observability"]
+        M6["Phase 6:<br/>Dynamic DLP (Server Layer)"]
+        M7["Phase 7:<br/>Strict IDE Binding (Client Layer)"]
+        M8["Phase 8:<br/>Sub-Agent Delegation (Agent Layer)"]
+    end
+
+    subgraph InFlight["🚀 In-Flight & Planned"]
+        M5["Phase 5:<br/>Remote SSE & Containers"]
+        M9["Phase 9:<br/>Gateway Router (Network Layer)"]
+        M10["Phase 10:<br/>Enterprise E2E Benchmark Suite"]
+    end
+
+    M1 --> M2 --> M3 --> M4 --> M6 --> M7 --> M8
+    M4 -.-> M5
+    M8 -.-> M9 --> M10
+```
+
+| Phase | Milestone Name | Key Deliverables | Status |
+| :---: | :--- | :--- | :---: |
+| **01** | **MVP Foundation** | `MCPServer` instance, stdio transport, initial health probes & log tailing | **Completed** |
+| **02** | **Security Hardening & Testing** | Canonical path validation, regex identifier checks, line clamping, pytest suite | **Completed** |
+| **03** | **MCP Resources & Prompts** | `telemetry://` resources, dynamic service discovery, `incident_triage` prompt | **Completed** |
+| **04** | **Enterprise Observability** | Structured JSON log filtering, regex pattern search, incident simulator script | **Completed** |
+| **05** | **Remote SSE & Containers** | Multi-stage Dockerfile, Starlette SSE transport daemon, HTTP Bearer auth | *In-Flight* |
+| **06** | **Hybrid-Trust: Dynamic DLP** | Luhn-validated PAN masking, HIPAA scrubbing, token redactions, origin modes | **Completed** |
+| **07** | **Hybrid-Trust: Strict IDE Binding** | Continue.dev dual profiles, `verify_ide_isolation.py` pre-flight linter | **Completed** |
+| **08** | **Hybrid-Trust: Sub-Agent Delegation** | Two-tier agent hierarchy, `delegate_telemetry_investigation`, local fallback | **Completed** |
+| **09** | **Hybrid-Trust: Gateway Router** | Tool-triggered proxy model swapping with LiteLLM / Envoy sidecar | *Architected* |
+| **10** | **Enterprise E2E Verification** | High-concurrency benchmarks, end-to-end chaos tests, SOC 2 compliance pack | *Planned* |
+
+👉 *For exhaustive milestone deliverables, code snippets, and learning competencies, see the [**Full Project Roadmap (`docs/roadmap.md`)**](./docs/roadmap.md).*
 
 ---
 
 ## ⚡ Quickstart Guide
 
 ### 1. Prerequisites
-- **Python:** `>= 3.11`
+- **Python:** `>= 3.12`
 - **`uv` (Package Manager):**
   ```bash
   curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -163,207 +250,148 @@ flowchart LR
 
 ### 2. Clone & Setup
 ```bash
-git clone https://github.com/YOUR_USERNAME/Telemetry_MCP_Server.git
-cd Telemetry_MCP_Server
+git clone https://github.com/RESTfulInSeattle/Hybrid_Trust_Telemetry_MCP_Server.git
+cd Hybrid_Trust_Telemetry_MCP_Server
 
 # Synchronize dependencies
 uv sync
 ```
 
-### 3. Test the Server
+### 3. Verify the Installation
 
-#### Option A: Interactive Web Inspector (`mcp dev`)
-Test your tools in a browser-based UI using the official MCP inspector:
+#### Option A: Automated Test Suite & Static Analysis
+Execute the full regression test suite (happy paths, negative security boundaries, path traversal matrix, and DLP rules):
 ```bash
-uv run mcp dev src/telemetry_mcp_server/server.py
-```
-*(Requires `npx` / Node.js installed via `brew install node`).*
-
-#### Option B: Direct Python Smoke Test (No Node.js needed)
-```bash
-uv run python -c "from telemetry_mcp_server.server import get_system_health; print(get_system_health())"
-```
-
-#### Option C: Automated Test Suite & Static Analysis
-Execute the full regression test suite (happy paths, boundary conditions, and path traversal matrix) alongside code quality gates:
-```bash
-# Execute 68+ automated unit, DLP, and security tests
+# Execute automated unit, DLP, and security tests across 9 test modules
 uv run pytest -v
 
-# Verify code formatting, linting, and strict type hints
+# Verify code formatting, linting, and strict typing
 uv run ruff check .
 uv run ruff format --check .
 uv run mypy src/ scripts/ tests/
 ```
 
+#### Option B: Direct Python Smoke Test (No Node.js needed)
+```bash
+uv run python -c "from telemetry_mcp_server.server import get_system_health, get_security_posture; print(get_system_health()); print(get_security_posture())"
+```
+
+#### Option C: Interactive Web Inspector (`mcp dev`)
+Inspect tool schemas and test invocations in a browser UI using the official MCP inspector:
+```bash
+uv run mcp dev src/telemetry_mcp_server/server.py
+```
+
 #### Option D: Synthetic Incident Simulator & Pre-Flight Linter
 ```bash
-# Inject realistic multi-service faults (burst mode for fast testing)
+# Inject 15 realistic multi-service faults for testing
 python scripts/simulate_incident.py --burst 15 --scenario all
 
-# Validate IDE configurations against Hybrid-Trust isolation rules
-python scripts/verify_ide_isolation.py examples/continue_config.json
+# Audit IDE configuration against Hybrid-Trust isolation rules
+python scripts/verify_ide_isolation.py --config examples/continue_config.json
 ```
 
 ---
 
-## 🔌 Connecting to LLM Hosts
+## 🔌 Connecting to LLM Clients & IDEs
 
 Because the Telemetry MCP server communicates over standard input/output (`stdio`), **you do not need to start it manually**. Your MCP-compatible client will automatically spawn and manage the server process in the background.
 
-### Cline (VS Code) & Claude Desktop
-Both Cline (VS Code) and Claude Desktop use the same `mcp_settings.json` / `claude_desktop_config.json` schema. Add the following object to your configuration:
-
-```json
-{
-  "mcpServers": {
-    "telemetry-inspector": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "/Users/YOUR_MAC_USERNAME/Development/Telemetry_MCP_Server",
-        "python",
-        "src/telemetry_mcp_server/server.py"
-      ]
-    }
-  }
-}
-```
-
-### Hybrid-Trust Dual-Profile Setup (AI Gateway)
-To enforce air-gapping between trade secrets and cloud APIs, you can route your local IDEs through a local API Gateway (like LiteLLM). Bind the Telemetry MCP server to a local reasoning model (like Qwen 3) so proprietary logs are never transmitted to cloud endpoints:
+### Option 1: Continue.dev (Recommended for Hybrid-Trust Dual Profiles)
+Copy [`examples/continue_config.json`](./examples/continue_config.json) to `~/.continue/config.json`. This provides:
+1. **Cloud Profile ("Cloud - General Engineering"):** Claude 3.5 Sonnet for planning and refactoring without internal telemetry access.
+2. **Local Profile ("Local - Secure Telemetry"):** Qwen 2.5 Coder via Ollama attached to `TelemetryInspector` with zero cloud egress.
 
 ```json
 {
   "models": [
     {
-      "title": "Cloud (No Telemetry Tools)",
+      "title": "Cloud - General Engineering (No Internal Telemetry)",
       "provider": "anthropic",
       "model": "claude-3-5-sonnet-20241022",
       "apiKey": "${ANTHROPIC_API_KEY}"
     },
     {
-      "title": "Local Secure (Telemetry & Trade Secrets)",
-      "provider": "openai",
-      "model": "qwen3-4b-thinking",
-      "apiBase": "http://127.0.0.1:11434/v1",
-      "apiKey": "sk-local"
+      "title": "Local - Secure Telemetry (Zero Cloud Egress)",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:32b",
+      "apiBase": "http://localhost:11434"
     }
   ],
   "mcpServers": {
+    "telemetry-inspector-secure": {
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/Telemetry_MCP_Server", "python", "-m", "telemetry_mcp_server.server"],
+      "env": {
+        "TELEMETRY_LOG_DIR": "/path/to/Telemetry_MCP_Server/logs",
+        "SECURITY_MODE": "STRICT_LOCAL",
+        "TELEMETRY_DLP_ENABLED": "true"
+      }
+    }
+  }
+}
+```
+
+### Option 2: Claude Desktop (`claude_desktop_config.json`)
+For Claude Desktop (which transmits context to Anthropic's cloud APIs), **always enforce `REDACTED_CLOUD` mode**:
+
+```json
+{
+  "mcpServers": {
     "telemetry-inspector": {
       "command": "uv",
       "args": [
         "run",
         "--directory",
-        "/Users/YOUR_MAC_USERNAME/Development/Telemetry_MCP_Server",
+        "/path/to/Telemetry_MCP_Server",
         "python",
-        "src/telemetry_mcp_server/server.py"
-      ]
+        "-m",
+        "telemetry_mcp_server.server"
+      ],
+      "env": {
+        "SECURITY_MODE": "REDACTED_CLOUD",
+        "TELEMETRY_DLP_ENABLED": "true"
+      }
     }
   }
 }
 ```
-
-### Local AI Distributed Coding Environment (Tier 3 Context Layer)
-
-When integrated into the **Local AI Distributed Coding Environment** (M5 Pro host running `vllm-mlx` and `litellm` alongside Mac and Windows 11 clients):
-
-#### Mode A: Local Client on Mac Host (Standard stdio)
-For VS Code (using Cline) running locally on the Mac inference host:
-
-```json
-{
-  "mcpServers": {
-    "telemetry-inspector": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--directory",
-        "/Users/YOUR_MAC_USERNAME/Development/Telemetry_MCP_Server",
-        "telemetry-mcp-server"
-      ]
-    }
-  }
-}
-```
-
-#### Mode B: Remote LAN Clients (Windows 11 / Remote IDEs via SSE)
-Because Windows 11 clients on the local network cannot spawn local child processes on the Mac host over stdio, you must run the Telemetry MCP Server as a background daemon on the Mac listening on all network interfaces via SSE:
-
-```bash
-# On Mac Host (Terminal):
-uv run telemetry-mcp-server --transport sse --host 0.0.0.0 --port 8080
-```
-
-Then configure your remote Windows client (VS Code with Cline / Agent Harness) to connect directly to the Mac's LAN IP:
-
-```json
-{
-  "mcpServers": {
-    "telemetry-inspector": {
-      "url": "http://<mac_ip_address>:8080/sse"
-    }
-  }
-}
-```
-
-#### CLI Options & Environment Variables
-| Option | Environment Variable | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `--transport` | `MCP_TRANSPORT` | `stdio` | Transport protocol (`stdio`, `sse`, `streamable-http`) |
-| `--host` | `MCP_HOST` | `0.0.0.0` | Bind host address for network transports |
-| `--port` | `MCP_PORT` | `8080` | Bind port number for network transports |
-| `--log-dir` | `TELEMETRY_LOG_DIR` | `./logs` | Directory path containing monitored service logs |
-| `--security-mode` | `SECURITY_MODE` | `STRICT_LOCAL` | Hybrid-trust mode (`STRICT_LOCAL`, `REDACTED_CLOUD`, `AUDIT_ONLY`) |
 
 ---
 
-## 💬 Sample Agentic Interaction
+## 💼 Portfolio & Technical Interview Framing
 
-Once connected, you can prompt your AI assistant naturally:
-
-> **User:** *"Are there any active issues affecting our authentication service?"*
-
-**Behind the Scenes:**
-1. The LLM checks its available tool schemas and identifies `TelemetryInspector`.
-2. It invokes `read_recent_errors(service_name="auth", lines=20)`.
-3. The MCP server sanitizes the path, verifies that `logs/auth.log` exists inside the allowed root, tails the last 20 lines, and returns them over stdio.
-4. The LLM reads the result and answers:
-> *"Yes. The authentication service is experiencing intermittent Redis connection timeouts during token verification (`ConnectionTimeout: Redis cache unreachable at 10.0.4.12:6379`). The database connection pool remains healthy."*
-
----
-
-## 💼 Portfolio & Interview Framing
-
-This project is tailored to demonstrate senior-level AI systems engineering concepts:
+This project demonstrates advanced, production-grade AI systems engineering concepts:
 
 | Interview Talking Point | Implementation in this Repository |
 | :--- | :--- |
-| **Agent Governance** | Enforcing strict API boundaries rather than raw terminal execution. |
-| **Protocol Evolution (MCP 2.x)** | Up-to-date with the official Anthropic MCP 2.x standard (`MCPServer`), migrating cleanly from v1 `FastMCP`. |
-| **Tool Design for LLMs** | Semantic docstrings engineered for zero-shot tool selection by small/local LLMs (Qwen 30B, Llama 3) and frontier models. |
-| **Security & Containment** | Defensive path resolution preventing directory traversal (`tests/test_security.py`). |
-| **Context Window Economics** | Bounded line tailing and pagination to prevent log flooding into LLM prompts. |
-| **Hybrid-Trust Architecture** | Protecting trade secrets by binding local models (Qwen, Llama) to sensitive telemetry while using cloud frontier models (Claude, GPT) for general reasoning. |
-| **AI-First Engineering** | Machine-readable development contract codified in [`AGENTS.md`](./AGENTS.md). |
+| **Agent Governance & Safety** | Fine-grained, least-privilege MCP tool boundaries instead of high-risk arbitrary shell execution. |
+| **Hybrid-Trust Architecture** | Dual-zone ecosystem pairing local models (Qwen, Llama on Ollama) for zero-egress telemetry with frontier cloud models (Claude, GPT-4) for architectural synthesis. |
+| **Dynamic Data Loss Prevention (DLP)** | In-server regex and Luhn-validated card masking, HIPAA scrubbing, token redactions, and RFC 1918 masking (`dlp.py`). |
+| **Multi-Agent Delegation** | Hierarchical delegation (`delegate_telemetry_investigation`) compressing 10,000 log lines into <400-token abstract briefs (97% token savings). |
+| **Automated Pre-Flight Governance** | AST and configuration linters (`verify_ide_isolation.py`) preventing accidental cloud exposure in pre-commit and CI. |
+| **Protocol Currency (MCP 2.x)** | Up-to-date with the official Anthropic MCP 2.x standard (`MCPServer`), migrating cleanly from legacy FastMCP. |
+| **Context Window Economics** | Bounded line tailing and pagination preventing context window pollution and "Lost in the Middle" model degradation. |
+| **AI-First Pedigree** | Machine-readable development contract codified in [`AGENTS.md`](./AGENTS.md). |
 
 ---
 
-## 📚 Supporting Documentation
+## 📚 Supporting Documentation & Architecture Index
 
-- 🧭 [**Documentation Hub (`docs/README.md`)**](./docs/README.md) — Central documentation index and navigation map.
-- 🔧 [**Agent Tools Reference (`docs/tools_reference.md`)**](./docs/tools_reference.md) — Comprehensive operational catalog and schemas for all MCP tools.
-- 🤖 [**`AGENTS.md`**](./AGENTS.md) — The AI agent operating contract, coding standards, and runbooks.
-- 🏛️ [**`docs/architecture.md`**](./docs/architecture.md) — Deep dive into the MCP protocol, security boundary design, and wire protocol.
-- 🛡️ [**`docs/architecture/hybrid_trust_use_cases.md`**](./docs/architecture/hybrid_trust_use_cases.md) — Enterprise hybrid-trust use cases, trade secret protection, and threat models.
-- 📐 [**`docs/architecture/README.md`**](./docs/architecture/README.md) — Modular architecture patterns (Dynamic DLP, Sub-Agent, Profile Binding, Gateway Router).
-- 🗺️ [**`docs/roadmap.md`**](./docs/roadmap.md) — Phased skill development curriculum (MVP to Enterprise Hybrid-Trust Architectures).
-- 🎬 [**`docs/runbooks/showcase_runbook.md`**](./docs/runbooks/showcase_runbook.md) — 5-minute live demo script and interview walkthrough.
-- 📖 [**`docs/tutorials/building_your_first_mcp_server.md`**](./docs/tutorials/building_your_first_mcp_server.md) — Step-by-step foundation walkthrough.
+- 🧭 [**Documentation Hub (`docs/README.md`)**](./docs/README.md) — Central documentation index, Diátaxis structure, and reading paths.
+- 🏛️ [**Architecture & Hybrid-Trust Hub (`docs/architecture/README.md`)**](./docs/architecture/README.md) — 4-layer defense model, decision flowcharts, and pattern comparisons.
+- 🛡️ [**Hybrid-Trust Enterprise Use Cases (`docs/architecture/hybrid_trust_use_cases.md`)**](./docs/architecture/hybrid_trust_use_cases.md) — Deep-dive HFT, HIPAA/PCI, and air-gapped threat models.
+- 🔬 [**Dynamic DLP Pattern Specification (`docs/architecture/dynamic_dlp_pattern.md`)**](./docs/architecture/dynamic_dlp_pattern.md) — In-server payload redaction mechanics.
+- 🤝 [**Sub-Agent Delegation Pattern (`docs/architecture/sub_agent_delegation_pattern.md`)**](./docs/architecture/sub_agent_delegation_pattern.md) — Two-tier agent orchestration guide.
+- ⚙️ [**Strict IDE Profile Binding (`docs/architecture/strict_ide_profile_binding.md`)**](./docs/architecture/strict_ide_profile_binding.md) — UI air-gapping and pre-flight linter guide.
+- 🔀 [**Gateway Router Pattern (`docs/architecture/gateway_router_pattern.md`)**](./docs/architecture/gateway_router_pattern.md) — Tool-triggered proxy model swapping.
+- 🔧 [**Agent Tools Reference (`docs/tools_reference.md`)**](./docs/tools_reference.md) — Complete schemas and security specifications for all MCP tools.
+- 🗺️ [**Skill Development Roadmap (`docs/roadmap.md`)**](./docs/roadmap.md) — Phased curriculum from MVP to Enterprise Architectures.
+- 🎬 [**Showcase Runbook (`docs/runbooks/showcase_runbook.md`)**](./docs/runbooks/showcase_runbook.md) — 5-minute live demo script and interview walkthrough.
+- 📖 [**Tutorial: Building Your First MCP Server (`docs/tutorials/building_your_first_mcp_server.md`)**](./docs/tutorials/building_your_first_mcp_server.md) — Foundation walkthrough.
+- 🤖 [**AI Agent Contract (`AGENTS.md`)**](./AGENTS.md) — Operating guidelines and quality gates for AI collaborators.
 
 ---
 
 ## 📄 License
-MIT License. Free to use for learning, portfolio showcases, and production adaptations.
+MIT License. Free to use for research, portfolio showcases, and enterprise production adaptations.
