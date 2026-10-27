@@ -23,6 +23,10 @@ flowchart TD
         T2["list_available_services()"]
         T3["read_recent_errors(service_name, lines)"]
         T4["search_logs_by_pattern(service_name, pattern, max_matches)"]
+        T5["filter_logs(service_name, level, start_time, end_time, max_lines)"]
+        T6["delegate_telemetry_investigation(service_name, issue_description, max_summary_tokens)"]
+        T7["get_security_posture()"]
+        T8["sanitize_telemetry_payload(payload, trust_mode)"]
     end
 
     MCP --> Tools
@@ -316,6 +320,79 @@ def search_logs_by_pattern(service_name: str, pattern: str, max_matches: int = 2
 [2026-10-25 19:00:12] [ERROR] Payment capture failed tx_id=tx_994825: 504 Gateway Timeout
 ```
 
+### 2.5 `filter_logs`
+
+Filters logs for a specific service by minimum severity level and/or timestamp window. Supports both structured JSON logs (NDJSON) and standard syslog/bracketed lines.
+
+- **Implementation:** [`filter_logs()`](../src/telemetry_mcp_server/server.py) -> [`tools.logs.filter_logs()`](../src/telemetry_mcp_server/tools/logs.py)
+- **Primary Agent Use Case:** Quickly isolate high-severity anomalies (`ERROR`, `CRITICAL`) within an incident window without ingesting nominal debug/info lines.
+
+#### Signature & Parameters
+
+```python
+def filter_logs(
+    service_name: str,
+    level: str | None = None,
+    start_time: str | None = None,
+    end_time: str | None = None,
+    max_lines: int = 50,
+) -> str
+```
+
+- `service_name`: Monitored service identifier (`auth`, `payment`, `database`, `inference`, `matching_engine`).
+- `level`: Minimum severity threshold (`DEBUG`, `INFO`, `WARN`, `ERROR`, `CRITICAL`).
+- `start_time`: ISO-8601 or standard datetime string (`2026-10-25T18:30:00`).
+- `end_time`: Optional upper datetime bound.
+- `max_lines`: Maximum lines to return (1-200, default 50).
+
+---
+
+### 2.6 `delegate_telemetry_investigation`
+
+Delegates sensitive telemetry diagnostics to an on-premise local sub-agent (or governed local analyzer). Protects proprietary algorithms, trade secrets, and internal stack traces from cloud context pollution.
+
+- **Implementation:** [`delegate_telemetry_investigation()`](../src/telemetry_mcp_server/server.py) -> [`tools.delegation.delegate_telemetry_investigation()`](../src/telemetry_mcp_server/tools/delegation.py)
+- **Primary Agent Use Case:** Used by Frontier Cloud Models (Claude 3.5 Sonnet, GPT-4o) when triaging proprietary components (e.g. HFT matching engines, algorithmic weights) to obtain an abstract computer-science incident brief (< 400 tokens) without raw code leakage.
+
+#### Signature & Parameters
+
+```python
+def delegate_telemetry_investigation(
+    service_name: str,
+    issue_description: str,
+    max_summary_tokens: int = 400,
+) -> str
+```
+
+---
+
+### 2.7 `get_security_posture`
+
+Returns real-time telemetry on the server's Hybrid-Trust security posture, active trust zone (`STRICT_LOCAL` vs `REDACTED_CLOUD`), active DLP scrubbers, and cumulative redaction statistics.
+
+- **Implementation:** [`get_security_posture()`](../src/telemetry_mcp_server/server.py) -> [`tools.security_posture.get_security_posture()`](../src/telemetry_mcp_server/tools/security_posture.py)
+
+#### Signature & Parameters
+
+```python
+def get_security_posture() -> str
+```
+
+---
+
+### 2.8 `sanitize_telemetry_payload`
+
+Governed DLP utility tool allowing clients or gateways to sanitize arbitrary payloads against PCI-DSS (Luhn check), HIPAA/PII, credentials/keys, RFC 1918 IPs, and proprietary symbols.
+
+#### Signature & Parameters
+
+```python
+def sanitize_telemetry_payload(
+    payload: str,
+    trust_mode: str | None = None,
+) -> str
+```
+
 ---
 
 ## 3. Defense-in-Depth Security Matrix
@@ -363,14 +440,16 @@ In addition to callable tools, the server exposes MCP Resources and MCP Prompts:
 ### MCP Resources
 | URI | Description | MIME / Type |
 | :--- | :--- | :--- |
-| `telemetry://health` | Real-time system health summary and metrics. | `text/plain` (JSON) |
+| `telemetry://health` | Real-time system health summary and host metrics. | `text/plain` (JSON) |
+| `telemetry://security` | Hybrid-Trust security posture, active mode, and DLP audit counters. | `text/plain` (JSON) |
 | `telemetry://services` | Current list of monitored services. | `application/json` |
-| `telemetry://logs/{service}` | Tail stream of recent log entries for `{service}`. | `text/plain` |
+| `telemetry://logs/{service}` | Tail stream of recent log entries for `{service}` (governed by DLP). | `text/plain` |
 
 ### MCP Prompts
 | Prompt Name | Parameters | Purpose |
 | :--- | :--- | :--- |
 | `incident_triage` | `service_name` (str), `issue_description` (str) | Standardized 4-stage triage prompt guiding LLMs through blast radius query, error log tailing, pattern matching, and root cause synthesis. |
+| `hybrid_trust_triage` | `service_name` (str), `issue_description` (str) | Governed triage prompt guiding frontier models to verify security posture and leverage sub-agent delegation for trade-secret services. |
 
 ---
 

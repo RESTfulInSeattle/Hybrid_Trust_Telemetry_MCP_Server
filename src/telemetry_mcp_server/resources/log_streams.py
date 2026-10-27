@@ -1,7 +1,7 @@
 """MCP Resources implementation for Telemetry MCP Server.
 
 Exposes telemetry data streams over standard MCP URIs (telemetry://health,
-telemetry://services, telemetry://logs/{service}).
+telemetry://security, telemetry://services, telemetry://logs/{service}).
 """
 
 import json
@@ -10,6 +10,7 @@ from mcp.server import MCPServer
 
 from telemetry_mcp_server.tools.health import get_system_health
 from telemetry_mcp_server.tools.logs import list_available_services, read_recent_errors
+from telemetry_mcp_server.tools.security_posture import get_security_posture
 
 
 def register_resources(mcp_server: MCPServer) -> None:
@@ -23,6 +24,11 @@ def register_resources(mcp_server: MCPServer) -> None:
     def get_health_resource() -> str:
         """Resource exposing system health and telemetry metrics."""
         return get_system_health()
+
+    @mcp_server.resource("telemetry://security")
+    def get_security_resource() -> str:
+        """Resource exposing hybrid-trust security posture and DLP metrics."""
+        return get_security_posture()
 
     @mcp_server.resource("telemetry://services")
     def get_services_resource() -> str:

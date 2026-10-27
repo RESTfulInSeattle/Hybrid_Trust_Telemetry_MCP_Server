@@ -1,7 +1,7 @@
 [project]
 name = "telemetry-mcp-server"
 version = "0.1.0"
-description = "Add your description here"
+description = "Governed Model Context Protocol server for system telemetry, incident triage, and hybrid-trust architectures"
 readme = "README.md"
 authors = [
     { name = "David Clayton", email = "david@davidclayton.me" }
@@ -26,3 +26,7 @@ dev = [
     "pytest-asyncio>=1.4.0",
     "ruff>=0.17.2",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+testpaths = ["tests"]

@@ -55,12 +55,18 @@ flowchart LR
             T1["get_system_health()"]
             T2["read_recent_errors(service, lines)"]
             T3["search_logs_by_pattern(service, query)"]
-            T4["list_available_services()"]
+            T4["filter_logs(service, level, time_window)"]
+            T5["delegate_telemetry_investigation(service, issue)"]
+            T6["get_security_posture()"]
+            T7["sanitize_telemetry_payload(payload, mode)"]
+            T8["list_available_services()"]
         end
 
         subgraph Resources["MCP Resources"]
             R1["telemetry://health"]
-            R2["telemetry://logs/{service}"]
+            R2["telemetry://security"]
+            R3["telemetry://services"]
+            R4["telemetry://logs/{service}"]
         end
     end
 
@@ -181,13 +187,22 @@ uv run python -c "from telemetry_mcp_server.server import get_system_health; pri
 #### Option C: Automated Test Suite & Static Analysis
 Execute the full regression test suite (happy paths, boundary conditions, and path traversal matrix) alongside code quality gates:
 ```bash
-# Execute 36+ automated unit & security tests
+# Execute 68+ automated unit, DLP, and security tests
 uv run pytest -v
 
 # Verify code formatting, linting, and strict type hints
 uv run ruff check .
 uv run ruff format --check .
-uv run mypy src/
+uv run mypy src/ scripts/ tests/
+```
+
+#### Option D: Synthetic Incident Simulator & Pre-Flight Linter
+```bash
+# Inject realistic multi-service faults (burst mode for fast testing)
+python scripts/simulate_incident.py --burst 15 --scenario all
+
+# Validate IDE configurations against Hybrid-Trust isolation rules
+python scripts/verify_ide_isolation.py examples/continue_config.json
 ```
 
 ---
@@ -301,6 +316,7 @@ Then configure your remote Windows client (VS Code with Cline / Agent Harness) t
 | `--host` | `MCP_HOST` | `0.0.0.0` | Bind host address for network transports |
 | `--port` | `MCP_PORT` | `8080` | Bind port number for network transports |
 | `--log-dir` | `TELEMETRY_LOG_DIR` | `./logs` | Directory path containing monitored service logs |
+| `--security-mode` | `SECURITY_MODE` | `STRICT_LOCAL` | Hybrid-trust mode (`STRICT_LOCAL`, `REDACTED_CLOUD`, `AUDIT_ONLY`) |
 
 ---
 
@@ -338,6 +354,7 @@ This project is tailored to demonstrate senior-level AI systems engineering conc
 ## 📚 Supporting Documentation
 
 - 🧭 [**Documentation Hub (`docs/README.md`)**](./docs/README.md) — Central documentation index and navigation map.
+- 🔧 [**Agent Tools Reference (`docs/tools_reference.md`)**](./docs/tools_reference.md) — Comprehensive operational catalog and schemas for all MCP tools.
 - 🤖 [**`AGENTS.md`**](./AGENTS.md) — The AI agent operating contract, coding standards, and runbooks.
 - 🏛️ [**`docs/architecture.md`**](./docs/architecture.md) — Deep dive into the MCP protocol, security boundary design, and wire protocol.
 - 🛡️ [**`docs/architecture/hybrid_trust_use_cases.md`**](./docs/architecture/hybrid_trust_use_cases.md) — Enterprise hybrid-trust use cases, trade secret protection, and threat models.
