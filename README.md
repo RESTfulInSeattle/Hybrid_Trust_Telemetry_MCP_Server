@@ -202,20 +202,19 @@ flowchart TD
         M2["Phase 2:<br/>Security & Testing"]
         M3["Phase 3:<br/>MCP Resources & Prompts"]
         M4["Phase 4:<br/>Enterprise Observability"]
-        M6["Phase 6:<br/>Dynamic DLP (Server Layer)"]
-        M7["Phase 7:<br/>Strict IDE Binding (Client Layer)"]
-        M8["Phase 8:<br/>Sub-Agent Delegation (Agent Layer)"]
+        M5["Phase 5:<br/>Dynamic DLP (Server Layer)"]
+        M6["Phase 6:<br/>Strict IDE Binding (Client Layer)"]
+        M7["Phase 7:<br/>Sub-Agent Delegation (Agent Layer)"]
     end
 
     subgraph InFlight["🚀 In-Flight & Planned"]
-        M5["Phase 5:<br/>Remote SSE & Containers"]
-        M9["Phase 9:<br/>Gateway Router (Network Layer)"]
+        M8["Phase 8:<br/>Gateway Router (Network Layer)"]
+        M9["Phase 9:<br/>Remote SSE & Containers"]
         M10["Phase 10:<br/>Enterprise E2E Benchmark Suite"]
     end
 
-    M1 --> M2 --> M3 --> M4 --> M6 --> M7 --> M8
-    M4 -.-> M5
-    M8 -.-> M9 --> M10
+    M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7
+    M7 -.-> M8 --> M9 --> M10
 ```
 
 | Phase | Milestone Name | Key Deliverables | Status |
@@ -224,11 +223,11 @@ flowchart TD
 | **02** | **Security Hardening & Testing** | Canonical path validation, regex identifier checks, line clamping, pytest suite | **Completed** |
 | **03** | **MCP Resources & Prompts** | `telemetry://` resources, dynamic service discovery, `incident_triage` prompt | **Completed** |
 | **04** | **Enterprise Observability** | Structured JSON log filtering, regex pattern search, incident simulator script | **Completed** |
-| **05** | **Remote SSE & Containers** | Multi-stage Dockerfile, Starlette SSE transport daemon, HTTP Bearer auth | *In-Flight* |
-| **06** | **Hybrid-Trust: Dynamic DLP** | Luhn-validated PAN masking, HIPAA scrubbing, token redactions, origin modes | **Completed** |
-| **07** | **Hybrid-Trust: Strict IDE Binding** | Continue.dev dual profiles, `verify_ide_isolation.py` pre-flight linter | **Completed** |
-| **08** | **Hybrid-Trust: Sub-Agent Delegation** | Two-tier agent hierarchy, `delegate_telemetry_investigation`, local fallback | **Completed** |
-| **09** | **Hybrid-Trust: Gateway Router** | Tool-triggered proxy model swapping with LiteLLM / Envoy sidecar | *Architected* |
+| **05** | **Hybrid-Trust: Dynamic DLP** | Luhn-validated PAN masking, HIPAA scrubbing, token redactions, origin modes | **Completed** |
+| **06** | **Hybrid-Trust: Strict IDE Binding** | Continue.dev dual profiles, `verify_ide_isolation.py` pre-flight linter | **Completed** |
+| **07** | **Hybrid-Trust: Sub-Agent Delegation** | Two-tier agent hierarchy, `delegate_telemetry_investigation`, local fallback | **Completed** |
+| **08** | **Hybrid-Trust: Gateway Router** | Tool-triggered proxy model swapping with LiteLLM / Envoy sidecar | *Architected* |
+| **09** | **Remote SSE & Containers** | Multi-stage Dockerfile, Starlette SSE transport daemon, HTTP Bearer auth | *In-Flight* |
 | **10** | **Enterprise E2E Verification** | High-concurrency benchmarks, end-to-end chaos tests, SOC 2 compliance pack | *Planned* |
 
 👉 *For exhaustive milestone deliverables, code snippets, and learning competencies, see the [**Full Project Roadmap (`docs/roadmap.md`)**](./docs/roadmap.md).*

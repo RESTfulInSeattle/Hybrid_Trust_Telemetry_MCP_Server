@@ -12,14 +12,17 @@ flowchart TD
         M1["Phase 1:<br/>MVP Foundation"] --> M2["Phase 2:<br/>Security & Testing"]
         M2 --> M3["Phase 3:<br/>MCP Resources & Prompts"]
         M3 --> M4["Phase 4:<br/>Enterprise Observability"]
-        M4 --> M5["Phase 5:<br/>Remote SSE & Containers"]
     end
 
     subgraph HybridTrust["Hybrid-Trust Enterprise Patterns"]
-        M5 --> M6["Phase 6:<br/>Dynamic DLP (Server Layer)"]
-        M6 --> M7["Phase 7:<br/>Strict IDE Binding (Client Layer)"]
-        M7 --> M8["Phase 8:<br/>Sub-Agent Delegation (Agent Layer)"]
-        M8 --> M9["Phase 9:<br/>Gateway Router (Network Layer)"]
+        M4 --> M5["Phase 5:<br/>Dynamic DLP (Server Layer)"]
+        M5 --> M6["Phase 6:<br/>Strict IDE Binding (Client Layer)"]
+        M6 --> M7["Phase 7:<br/>Sub-Agent Delegation (Agent Layer)"]
+        M7 --> M8["Phase 8:<br/>Gateway Router (Network Layer)"]
+    end
+
+    subgraph InfrastructureVerification["Cloud-Native Delivery & Enterprise Showcase"]
+        M8 --> M9["Phase 9:<br/>Remote SSE & Containers"]
         M9 --> M10["Phase 10:<br/>Enterprise E2E Verification"]
     end
 ```
@@ -108,25 +111,7 @@ flowchart TD
 
 ---
 
-## Phase 5: Containerization & Remote Transport (SSE)
-*Focus: Cloud-native deployment, containerization, and remote agent connectivity.*
-
-- [ ] **Docker Packaging:**
-  - Build a lightweight `Dockerfile` using multi-stage `uv` builds.
-  - Support non-root container execution with read-only mounted volume for `/logs`.
-- [ ] **Server-Sent Events (SSE) Transport Mode:**
-  - Expose `--transport sse` with Starlette / Uvicorn runner for remote AI agents and centralized observability gateways.
-- [ ] **Authentication & Access Control:**
-  - Implement HTTP Bearer token validation for SSE endpoints.
-  - Map incoming tokens to client identity roles for downstream authorization.
-
-**Key Competencies Acquired:**
-- Packaging MCP servers for production Kubernetes/container environments.
-- Remote vs. local MCP architectures and network security boundaries.
-
----
-
-## Phase 6: Hybrid-Trust Pattern 1 — Dynamic Data Loss Prevention (DLP) at MCP Layer (Implemented)
+## Phase 5: Hybrid-Trust Pattern 1 — Dynamic Data Loss Prevention (DLP) at MCP Layer (Implemented)
 *Focus: Embedding context-aware payload redaction and PII/credential scrubbing directly into the server pipeline.*  
 *Architectural Specification:* [**`docs/architecture/dynamic_dlp_pattern.md`**](./architecture/dynamic_dlp_pattern.md) & [**`docs/architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md#2-regulated-healthcare--financial-services-hipaa--pci-dss--pii-triage)
 
@@ -158,7 +143,7 @@ flowchart TD
 
 ---
 
-## Phase 7: Hybrid-Trust Pattern 2 — Strict IDE Profile Binding & Workspace Air-Gapping (Implemented)
+## Phase 6: Hybrid-Trust Pattern 2 — Strict IDE Profile Binding & Workspace Air-Gapping (Implemented)
 *Focus: Enforcing UI- and configuration-level air-gapping within IDE extensions to isolate sensitive MCP servers.*  
 *Architectural Specification:* [**`docs/architecture/strict_ide_profile_binding.md`**](./architecture/strict_ide_profile_binding.md) & [**`docs/architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md#3-air-gapped-core-ip--defense-systems-zero-cloud-telemetry)
 
@@ -180,7 +165,7 @@ flowchart TD
 
 ---
 
-## Phase 8: Hybrid-Trust Pattern 3 — Sub-Agent Delegation Model (Implemented)
+## Phase 7: Hybrid-Trust Pattern 3 — Sub-Agent Delegation Model (Implemented)
 *Focus: Constructing a two-tier agent hierarchy where a frontier model delegates raw telemetry analysis to a local model.*  
 *Architectural Specification:* [**`docs/architecture/sub_agent_delegation_pattern.md`**](./architecture/sub_agent_delegation_pattern.md) & [**`docs/architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md#1-proprietary-algorithm--high-frequency-trading-hft-incident-diagnosis)
 
@@ -200,14 +185,9 @@ flowchart TD
 - Context window optimization and token cost reduction in agentic loops.
 - Intellectual property isolation via agentic synthesis and semantic abstraction.
 
-**Key Competencies Acquired:**
-- Multi-agent orchestration and hierarchical delegation design.
-- Context window optimization and token cost reduction in agentic loops.
-- Intellectual property isolation via agentic synthesis and semantic abstraction.
-
 ---
 
-## Phase 9: Hybrid-Trust Pattern 4 — AI Gateway Router (Tool-Triggered Model Swapping)
+## Phase 8: Hybrid-Trust Pattern 4 — AI Gateway Router (Tool-Triggered Model Swapping)
 *Focus: Intercepting JSON-RPC tool calls at the network proxy layer to dynamically route sensitive requests to local models.*  
 *Architectural Specification:* [**`docs/architecture/gateway_router_pattern.md`**](./architecture/gateway_router_pattern.md) & [**`docs/architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md#4-automated-incident-routing--model-swapping-via-ai-gateway)
 
@@ -238,8 +218,26 @@ flowchart TD
 
 ---
 
+## Phase 9: Containerization & Remote Transport (SSE)
+*Focus: Cloud-native deployment, containerization, and remote agent connectivity.*
+
+- [ ] **Docker Packaging:**
+  - Build a lightweight `Dockerfile` using multi-stage `uv` builds.
+  - Support non-root container execution with read-only mounted volume for `/logs`.
+- [ ] **Server-Sent Events (SSE) Transport Mode:**
+  - Expose `--transport sse` with Starlette / Uvicorn runner for remote AI agents and centralized observability gateways.
+- [ ] **Authentication & Access Control:**
+  - Implement HTTP Bearer token validation for SSE endpoints.
+  - Map incoming tokens to client identity roles for downstream authorization.
+
+**Key Competencies Acquired:**
+- Packaging MCP servers for production Kubernetes/container environments.
+- Remote vs. local MCP architectures and network security boundaries.
+
+---
+
 ## Phase 10: Enterprise Hybrid-Trust Verification & Live Showcase
-*Focus: End-to-end integration across all 4 tiers, threat defense verification suite, and portfolio demonstration runbook.*  
+*Focus: End-to-end integration across all tiers, threat defense verification suite, and portfolio demonstration runbook.*  
 *Architectural Specification:* [**`docs/architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md) & [**`docs/runbooks/showcase_runbook.md`**](./runbooks/showcase_runbook.md)
 
 - [ ] **End-to-End Enterprise Scenario Datasets:**
@@ -252,7 +250,7 @@ flowchart TD
     3. *Regulatory Compliance Verification:* Zero PAN/PHI tokens present in cloud-bound payloads.
     4. *Context Window Blowout Prevention:* Verifying tail bounded limits and sub-agent brief token caps (< 500 tokens).
 - [ ] **Benchmarking & Cost Analysis Report (`docs/architecture/hybrid_trust_benchmark.md`):**
-  - Measure token reduction (cloud vs. local sub-agent) and latency trade-offs across all 4 patterns.
+  - Measure token reduction (cloud vs. local sub-agent) and latency trade-offs across all patterns.
 - [ ] **Showcase Runbook Updates (`docs/runbooks/showcase_runbook.md`):**
   - Add 5-minute interactive demonstration script walking through:
     1. Live incident trigger via `scripts/simulate_incident.py`.
@@ -269,10 +267,11 @@ flowchart TD
 
 ## 📊 Hybrid-Trust Architectural Tier Summary
 
-| Phase | Pattern | Architectural Tier | Primary Protection Target | Primary Deliverable |
+| Phase | Milestone Name | Architectural Tier | Primary Protection Target | Primary Deliverable |
 | :--- | :--- | :--- | :--- | :--- |
-| **Phase 6** | [**Dynamic DLP**](./architecture/dynamic_dlp_pattern.md) | **Server Layer** (`MCPServer`) | PII, API Keys, Tokens, IPs | `src/telemetry_mcp_server/dlp.py` |
-| **Phase 7** | [**Strict IDE Binding**](./architecture/strict_ide_profile_binding.md) | **Client / IDE Layer** | Air-gapped environments, ITAR | `examples/continue_config.json`, `verify_ide_isolation.py` |
-| **Phase 8** | [**Sub-Agent Delegation**](./architecture/sub_agent_delegation_pattern.md) | **Agent Orchestration Layer** | Algorithmic IP, Trade Secrets | `tools/delegation.py`, `run_sub_agent_delegation.py` |
-| **Phase 9** | [**Gateway Router**](./architecture/gateway_router_pattern.md) | **Network Proxy Layer** | Enterprise fleets, Cost optimization | `config/litellm_config.yaml`, `gateway_proxy.py` |
+| **Phase 5** | [**Dynamic DLP**](./architecture/dynamic_dlp_pattern.md) | **Server Layer** (`MCPServer`) | PII, API Keys, Tokens, IPs | `src/telemetry_mcp_server/dlp.py` |
+| **Phase 6** | [**Strict IDE Binding**](./architecture/strict_ide_profile_binding.md) | **Client / IDE Layer** | Air-gapped environments, ITAR | `examples/continue_config.json`, `verify_ide_isolation.py` |
+| **Phase 7** | [**Sub-Agent Delegation**](./architecture/sub_agent_delegation_pattern.md) | **Agent Orchestration Layer** | Algorithmic IP, Trade Secrets | `tools/delegation.py`, `run_sub_agent_delegation.py` |
+| **Phase 8** | [**Gateway Router**](./architecture/gateway_router_pattern.md) | **Network Proxy Layer** | Enterprise fleets, Cost optimization | `config/litellm_config.yaml`, `gateway_proxy.py` |
+| **Phase 9** | **Remote SSE & Containers** | **Cloud-Native Infrastructure** | Remote connectivity, Daemon orchestration | `Dockerfile`, `telemetry_mcp_server --transport sse` |
 | **Phase 10** | [**Enterprise Showcase**](./architecture/hybrid_trust_use_cases.md) | **End-to-End System** | Defense-in-depth, Threat validation | `tests/test_hybrid_trust_threats.py`, Demo Runbook |
