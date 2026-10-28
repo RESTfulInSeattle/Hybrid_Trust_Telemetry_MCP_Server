@@ -72,7 +72,7 @@ flowchart TD
 | 🛡️ [**`dynamic_dlp_pattern.md`**](./dynamic_dlp_pattern.md) | **MCP Server / Middleware** | Customer PII, PCI-DSS cardholder data (Luhn-checked), JWTs, internal RFC 1918 IPs | **Zero** (Completely Transparent) | Medium (Regex & Luhn Checksums) |
 | 🤝 [**`sub_agent_delegation_pattern.md`**](./sub_agent_delegation_pattern.md) | **Agent Orchestration** | Core proprietary algorithms, quantitative trading alpha weights, lock-free ring buffers | Low (Handled by Primary Agent) | Medium-High (Two-Tier LLM Hierarchy) |
 | ⚙️ [**`strict_ide_profile_binding.md`**](./strict_ide_profile_binding.md) | **Client / IDE Configuration** | Defense systems (ITAR), air-gapped workstations, accidental cloud tool calls | Low-Medium (Profile Switch) | **Minimal** (Config JSON + Pre-Flight Linter) |
-| 🔀 [**`gateway_router_pattern.md`**](./gateway_router_pattern.md) | **Network Proxy (LiteLLM)** | Enterprise developer fleets, dynamic token cost arbitrage, centralized audit logging | **Zero** (Automated at Network Layer) | High (Proxy & Routing Infrastructure) |
+| 🔀 [**`gateway_router_pattern.md`**](./gateway_router_pattern.md) | **Network Proxy (LiteLLM)** | Enterprise developer fleets, dynamic token cost arbitrage, centralized audit logging | **Zero** (Automated at Network Layer) | **Implemented & Verified** |
 | 🏢 [**`hybrid_trust_use_cases.md`**](./hybrid_trust_use_cases.md) | **Master Use Case Guide** | Quantitative finance (HFT), healthcare (HIPAA), payments (PCI-DSS), air-gapped defense | Reference | Reference Guide & Threat Models |
 
 ---
@@ -111,11 +111,16 @@ This repository doesn't just specify these patterns—it includes automated scri
 2. **Synthetic Incident Generator (`scripts/simulate_incident.py`):**
    - Injects realistic, simulated faults (Redis timeouts, database deadlocks, memory leaks, and HFT race conditions) into mock log files for live agentic triage demonstrations.
    - Run via: `uv run python scripts/simulate_incident.py --services auth,payment,database --duration 30`.
-3. **Automated Hybrid-Trust Test Suite:**
+3. **AI Gateway Router & Model Swapper Proxy (`scripts/gateway_proxy.py`):**
+   - Intercepts OpenAI-compatible completions, inspects tool schemas and message history, and dynamically routes sensitive telemetry requests to `local-secure` with fail-closed security guarantees (zero cloud egress).
+   - Reference config in [`config/litellm_config.yaml`](../../config/litellm_config.yaml).
+   - Run via: `python scripts/gateway_proxy.py --port 4000 --config config/litellm_config.yaml`.
+4. **Automated Hybrid-Trust Test Suite:**
    - [`tests/test_dlp.py`](../../tests/test_dlp.py): Verifies Luhn-valid PAN masking, SSN scrubbing, and JWT removal.
    - [`tests/test_delegation.py`](../../tests/test_delegation.py): Verifies sub-agent abstraction and heuristic fallbacks.
    - [`tests/test_verify_ide_isolation.py`](../../tests/test_verify_ide_isolation.py): Validates pre-flight configuration linter logic.
    - [`tests/test_security_posture.py`](../../tests/test_security_posture.py): Validates `get_security_posture()` compliance reporting.
+   - [`tests/test_gateway_router.py`](../../tests/test_gateway_router.py): Validates tool call interception, dynamic model routing, fail-closed security, and context state pruning.
 
 ---
 

@@ -1,0 +1,46 @@
+# LiteLLM AI Gateway Configuration with Tool-Triggered Model Swapping
+# Telemetry MCP Server — Hybrid-Trust Architecture (Phase 8: Network Proxy Layer)
+# Specification: docs/architecture/gateway_router_pattern.md
+
+model_list:
+  # 1. Frontier Reasoning Tier (Cloud Egress - High-level synthesis, code refactoring)
+  - model_name: frontier-reasoning
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+      api_key: os.environ/ANTHROPIC_API_KEY
+      rpm: 100
+      timeout: 30
+
+  # 2. Local Secure Tier (Zero Egress - Sensitive Telemetry & Trade Secrets)
+  - model_name: local-secure
+    litellm_params:
+      model: openai/qwen2.5-coder-32b
+      api_base: http://localhost:11434/v1
+      api_key: "none"
+      tpm: 500000
+      timeout: 10
+
+router_settings:
+  routing_strategy: "tool-name-inspection"
+  rules:
+    # Route requests containing sensitive diagnostic tools strictly to the local on-premise cluster
+    - match_tool_names:
+        - "read_recent_errors"
+        - "get_system_health"
+        - "search_logs_by_pattern"
+        - "filter_logs"
+        - "delegate_telemetry_investigation"
+        - "get_security_posture"
+        - "sanitize_telemetry_payload"
+      route_to: "local-secure"
+      strip_raw_tool_results_before_cloud_handoff: true
+      fail_closed: true
+
+    # Default all benign coding, planning, and non-telemetry requests to the frontier model
+    - default: "frontier-reasoning"
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  alerting: ["slack"]
+  alerting_threshold: 500 # Alert on unexpected routing anomalies
+  telemetry_audit_logging: true

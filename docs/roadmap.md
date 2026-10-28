@@ -187,29 +187,29 @@ flowchart TD
 
 ---
 
-## Phase 8: Hybrid-Trust Pattern 4 — AI Gateway Router (Tool-Triggered Model Swapping)
+## Phase 8: Hybrid-Trust Pattern 4 — AI Gateway Router (Tool-Triggered Model Swapping) (Implemented)
 *Focus: Intercepting JSON-RPC tool calls at the network proxy layer to dynamically route sensitive requests to local models.*  
 *Architectural Specification:* [**`docs/architecture/gateway_router_pattern.md`**](./architecture/gateway_router_pattern.md) & [**`docs/architecture/hybrid_trust_use_cases.md`**](./architecture/hybrid_trust_use_cases.md#4-automated-incident-routing--model-swapping-via-ai-gateway)
 
-- [ ] **LiteLLM Gateway Configuration (`config/litellm_config.yaml`):**
+- [x] **LiteLLM Gateway Configuration (`config/litellm_config.yaml`):**
   - Define multi-model upstream targets:
     - `frontier-reasoning`: Points to Anthropic Claude 3.5 Sonnet / OpenAI GPT-4o.
-    - `local-secure`: Points to local Ollama / `llama.cpp` instance (e.g., `http://192.168.1.136:11434/v1`).
-- [ ] **Tool-Name Routing Rules Engine:**
+    - `local-secure`: Points to local Ollama / `llama.cpp` instance (e.g., `http://localhost:11434/v1` or `http://192.168.1.136:11434/v1`).
+- [x] **Tool-Name Routing Rules Engine:**
   - Configure tool inspection rules:
-    - Requests containing sensitive MCP tools (`read_recent_errors`, `get_system_health`, `search_logs_by_pattern`) route dynamically to `local-secure`.
+    - Requests containing sensitive MCP tools (`read_recent_errors`, `get_system_health`, `search_logs_by_pattern`, `filter_logs`, `delegate_telemetry_investigation`, `get_security_posture`, `sanitize_telemetry_payload`) route dynamically to `local-secure`.
     - Non-telemetry prompts and public tools route to `frontier-reasoning`.
-- [ ] **Lightweight Gateway Proxy Prototype (`scripts/gateway_proxy.py`):**
+- [x] **Lightweight Gateway Proxy Prototype (`scripts/gateway_proxy.py`):**
   - Standalone FastAPI/Starlette proxy demonstrating JSON-RPC payload inspection:
     - Parses incoming OpenAI-compatible `/v1/chat/completions` requests.
-    - Evaluates `tools` and `messages` for telemetry tool calls.
+    - Evaluates `tools` and `messages` for telemetry tool calls and traces.
     - Transparently routes to local inference vs cloud endpoint based on tool classification.
-- [ ] **Fail-Closed Security Guarantees:**
-  - Implement fail-closed exception handling: If the local secure endpoint is unreachable, restricted tool calls abort with a clean error message rather than failing open to cloud providers.
-- [ ] **Gateway Audit Logging & Metrics:**
-  - Track route diversion metrics: Tool invocations diverted to local vs. cloud, latency distributions, and token savings.
-- [ ] **Automated Gateway Tests (`tests/test_gateway_router.py`):**
-  - Integration tests verifying tool call interception, dynamic routing, and fail-closed behavior.
+- [x] **Fail-Closed Security Guarantees:**
+  - Implement fail-closed exception handling: If the local secure endpoint is unreachable, restricted tool calls abort with a clean error message (`503 fail_closed_security_violation`) rather than failing open to cloud providers.
+- [x] **Gateway Audit Logging & Metrics:**
+  - Track route diversion metrics: Tool invocations diverted to local vs. cloud, latency distributions, fail-closed events, and token savings.
+- [x] **Automated Gateway Tests (`tests/test_gateway_router.py`):**
+  - Integration tests verifying tool call interception, dynamic routing, and fail-closed behavior across 11 test cases.
 
 **Key Competencies Acquired:**
 - AI Gateway reverse proxy design and JSON-RPC payload interception.

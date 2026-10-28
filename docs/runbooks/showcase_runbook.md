@@ -10,7 +10,7 @@ This runbook provides a complete script, live demonstration guide, architectural
 >
 > *I built the **Telemetry MCP Server** to demonstrate **governed capability boundaries**. By implementing the Model Context Protocol (MCP 2.x) in Python, I gave our AI agents typed, observable, and bounded tools for health checking and log inspection. The server implements the complete MCP specification—**Tools**, **Resources**, and **Prompts**—backed by a 4-layer defense-in-depth security boundary and context window safeguards.*
 >
-> *Furthermore, to solve the enterprise dilemma of leaking proprietary code or trade secrets to cloud LLMs, this project implements a **Hybrid-Trust Architecture**. Local models running on Apple Silicon process raw telemetry with zero cloud egress, while frontier models like Claude 3.5 Sonnet receive sanitized abstractions. It also features a **Tier 3 Multi-Transport Context Layer** supporting both local `stdio` and distributed LAN `sse` streaming for remote IDEs."*
+> *Furthermore, to solve the enterprise dilemma of leaking proprietary code or trade secrets to cloud LLMs, this project implements a **Hybrid-Trust Architecture**. Local models running on Apple Silicon process raw telemetry with zero cloud egress, while frontier models like Claude 3.5 Sonnet receive sanitized abstractions. It features an **AI Gateway Router (`scripts/gateway_proxy.py`)** that intercepts tool calls at the proxy layer, dynamically hot-swaps models to local clusters with **fail-closed security guarantees**, and provides a **Tier 3 Multi-Transport Context Layer** supporting both local `stdio` and distributed LAN `sse` streaming for remote IDEs."*
 
 ---
 
@@ -91,13 +91,13 @@ flowchart TB
    ```
 2. **Execute Static Analysis & Test Suite Verification:**
    ```bash
-   # Verify all 36 unit & security boundary tests pass
+   # Verify all 79 automated unit, security boundary, and gateway router tests pass
    uv run pytest -v
 
    # Verify linting, formatting, and strict type checking
    uv run ruff check .
    uv run ruff format --check .
-   uv run mypy src/
+   uv run mypy src/ scripts/ tests/
    ```
 3. **Have Two Terminal Tabs / Windows Open:**
    - **Tab 1:** Server / MCP Inspector runner.
@@ -236,7 +236,63 @@ Open [`docs/architecture/hybrid_trust_use_cases.md`](../architecture/hybrid_trus
 
 ---
 
-### Step 5: Multi-Transport & Distributed LAN Deployment (Tier 3 Context Layer) (30 seconds)
+### Step 5: The AI Gateway Router & Dynamic Model Swapping (60 seconds)
+
+Demonstrate transparent, network-level tool governance using the Gateway Router:
+
+1. **Launch the Gateway Router:**
+   ```bash
+   python scripts/gateway_proxy.py --port 4000 --config config/litellm_config.yaml
+   ```
+   *(Point out the console startup banner showing active monitored tools, fail-closed enforcement, and dual upstream routes).*
+
+2. **Demonstrate Benign Routing (Frontier Cloud Tier):**
+   In a second terminal, execute a non-telemetry coding request:
+   ```bash
+   curl -s -X POST http://localhost:4000/v1/chat/completions \
+     -H "Content-Type: application/json" \
+     -d '{"messages": [{"role": "user", "content": "Refactor quicksort in Python"}]}' | jq .routing_metadata
+   ```
+   - **Result:**
+     ```json
+     {
+       "routed_tier": "frontier-reasoning",
+       "zero_cloud_egress": false,
+       "matched_sensitive_tools": [],
+       "target_endpoint": "https://api.anthropic.com/v1"
+     }
+     ```
+
+3. **Demonstrate Tool-Triggered Model Swapping (Local Zero-Egress Tier):**
+   Execute a request requesting sensitive telemetry inspection:
+   ```bash
+   curl -s -X POST http://localhost:4000/v1/chat/completions \
+     -H "Content-Type: application/json" \
+     -d '{"messages": [{"role": "user", "content": "Check Redis connection timeouts"}], "tools": [{"function": {"name": "read_recent_errors"}}]}' | jq .routing_metadata
+   ```
+   - **Result:**
+     ```json
+     {
+       "routed_tier": "local-secure",
+       "zero_cloud_egress": true,
+       "matched_sensitive_tools": ["read_recent_errors"],
+       "target_endpoint": "http://localhost:11434/v1"
+     }
+     ```
+   - **Interviewer Talking Point:** *"Without any manual developer intervention or IDE profile toggling, the gateway detected `read_recent_errors` in the tool schema and dynamically diverted the entire turn to the local on-premise cluster."*
+
+4. **Highlight the Fail-Closed Security Guarantee:**
+   - Explain how `scripts/gateway_proxy.py` guarantees that if the local secure cluster is offline during an incident, restricted requests abort with an HTTP 503 (`fail_closed_security_violation`) rather than failing open to third-party cloud APIs.
+
+5. **Inspect Live Metrics & Token Arbitrage:**
+   ```bash
+   curl -s http://localhost:4000/metrics | jq .
+   ```
+   - Show counters: `total_requests`, `routed_to_local`, `sensitive_tools_intercepted`, and `estimated_tokens_saved`.
+
+---
+
+### Step 6: Multi-Transport & Distributed LAN Deployment (Tier 3 Context Layer) (30 seconds)
 
 Explain how the server operates in a heterogeneous distributed engineering environment:
 
@@ -265,7 +321,7 @@ Configure remote Windows 11 clients in `mcp_settings.json`:
 
 ---
 
-### Step 6: Highlighting the AI-First Engineering Contract (30 seconds)
+### Step 7: Highlighting the AI-First Engineering Contract (30 seconds)
 
 Open [`AGENTS.md`](../../AGENTS.md) in your editor.
 
@@ -362,9 +418,21 @@ Open [`AGENTS.md`](../../AGENTS.md) in your editor.
 > *"We maintain [`AGENTS.md`](../../AGENTS.md) as an executable specification. It codifies architectural constraints, typing standards, and security requirements so AI assistants operate under strict governance.
 >
 > Every modification must clear rigorous automated gates:
-> 1. **Unit & Security Testing:** `uv run pytest -v` executes 36 automated tests, including a 27-case negative adversarial test matrix covering path traversal, null bytes, and command injection.
+> 1. **Unit & Security Testing:** `uv run pytest -v` executes 79 automated tests across 10 test modules, including negative adversarial path traversal suites, dynamic DLP rules, sub-agent delegation, and AI Gateway Router dynamic routing and fail-closed enforcement.
 > 2. **Static Analysis & Formatting:** `uv run ruff check .` and `uv run ruff format --check .`.
-> 3. **Strict Typing:** `uv run mypy src/` ensuring comprehensive type safety on all tool interfaces."*
+> 3. **Strict Typing:** `uv run mypy src/ scripts/ tests/` ensuring comprehensive type safety on all tool interfaces and proxy pipelines."*
+
+---
+
+### Q10: "How does the AI Gateway Router implement tool-triggered dynamic model swapping with fail-closed security?"
+> **Answer:**
+> *"In enterprise fleets with hundreds of developers across diverse IDEs (Cursor, VS Code, Continue, Claude Desktop), relying on developers to manually switch IDE profiles introduces significant human error risk during production incidents.
+>
+> Our AI Gateway Router (`scripts/gateway_proxy.py` configured via `config/litellm_config.yaml`) solves this transparently at the network layer:
+> 1. **Tool-Name Inspection Engine:** The proxy intercepts OpenAI-compatible `/v1/chat/completions` requests and inspects `tools` definitions, assistant `tool_calls`, and tool response messages.
+> 2. **Dynamic Hot-Swapping:** When sensitive telemetry tools (`read_recent_errors`, `get_system_health`, `search_logs_by_pattern`, `delegate_telemetry_investigation`) are detected, the request is dynamically routed to the local on-premise cluster (`local-secure`), guaranteeing zero cloud egress. Non-sensitive prompts route to frontier reasoning models (`frontier-reasoning`).
+> 3. **Fail-Closed Security Guarantee:** If the local secure cluster is unreachable or offline, the gateway immediately aborts with HTTP 503 (`fail_closed_security_violation`). It strictly refuses to fail open to cloud providers, preventing catastrophic accidental leaks of proprietary stack traces during infrastructure incidents.
+> 4. **State Pruning:** Before control returns to cloud models on subsequent turns, the gateway prunes multi-line raw error logs from context history, preventing token blowout and secondary exfiltration."*
 
 ---
 
@@ -373,13 +441,15 @@ Open [`AGENTS.md`](../../AGENTS.md) in your editor.
 | Action | Command | Purpose |
 | :--- | :--- | :--- |
 | **Sync Dependencies** | `uv sync` | Ensure virtual environment and dependencies are aligned |
-| **Run Regression Tests** | `uv run pytest -v` | Execute all 36 unit and security boundary tests |
-| **Type Check** | `uv run mypy src/` | Verify strict typing across tools, security, and server |
+| **Run Regression Tests** | `uv run pytest -v` | Execute all 79 unit, security boundary, and gateway router tests |
+| **Type Check** | `uv run mypy src/ scripts/ tests/` | Verify strict typing across tools, security, server, and scripts |
 | **Lint & Format Check** | `uv run ruff check . && uv run ruff format --check .` | Ensure code quality conforms to repository standards |
 | **Python Smoke Test** | `uv run python -c "from telemetry_mcp_server.server import get_system_health; print(get_system_health())"` | Verify health probe without launching browser |
 | **Launch MCP Inspector** | `uv run mcp dev src/telemetry_mcp_server/server.py` | Open interactive browser test bench for tools, resources, and prompts |
 | **Run CLI Entrypoint (stdio)** | `uv run telemetry-mcp-server` | Standard stdio transport for local IDEs (Cline / Continue) |
 | **Run Daemon (SSE)** | `uv run telemetry-mcp-server --transport sse --host 0.0.0.0 --port 8080` | Network transport for remote LAN clients (Windows 11 / remote IDEs) |
+| **Launch AI Gateway Router** | `python scripts/gateway_proxy.py --port 4000 --config config/litellm_config.yaml` | Start proxy with tool inspection, model swapping, and fail-closed security |
+| **Gateway Metrics & Audit** | `curl -s http://localhost:4000/metrics` | Inspect live route diversion counts, token savings, and zero-egress audit log |
 
 ---
 
@@ -389,6 +459,7 @@ Open [`AGENTS.md`](../../AGENTS.md) in your editor.
 - 📖 [**Project Overview & Quickstart (`README.md`)**](../../README.md)
 - 🏛️ [**Deep-Dive Architecture (`docs/architecture.md`)**](../architecture.md)
 - 🛡️ [**Enterprise Hybrid-Trust Architecture & Use Cases (`docs/architecture/hybrid_trust_use_cases.md`)**](../architecture/hybrid_trust_use_cases.md)
+- 🔀 [**Gateway Router Pattern Specification (`docs/architecture/gateway_router_pattern.md`)**](../architecture/gateway_router_pattern.md)
 - 📐 [**Modular Architecture Patterns Index (`docs/architecture/README.md`)**](../architecture/README.md)
 - 🗺️ [**Skill Development Roadmap (`docs/roadmap.md`)**](../roadmap.md)
 - 📖 [**Step-by-Step Foundation Tutorial (`docs/tutorials/building_your_first_mcp_server.md`)**](../tutorials/building_your_first_mcp_server.md)

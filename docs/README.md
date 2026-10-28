@@ -66,7 +66,7 @@ docs/
    - [**Sub-Agent Delegation Pattern**](./architecture/sub_agent_delegation_pattern.md) (Two-tier agent hierarchy)
    - [**Strict IDE Profile Binding**](./architecture/strict_ide_profile_binding.md) (Client air-gapping)
    - [**Gateway Router Pattern**](./architecture/gateway_router_pattern.md) (Proxy model swapping)
-4. Audit reference configurations in [**`examples/continue_config.json`**](../examples/continue_config.json) and test pre-flight governance using `python scripts/verify_ide_isolation.py`.
+4. Audit reference configurations in [**`examples/continue_config.json`**](../examples/continue_config.json), test pre-flight governance using `python scripts/verify_ide_isolation.py`, and test tool-triggered model swapping using `python scripts/gateway_proxy.py --config config/litellm_config.yaml`.
 
 ---
 

@@ -147,16 +147,53 @@ Organizations can deploy the Gateway Router in two primary architectures dependi
 | Architectural Dimension | [Dynamic DLP](./dynamic_dlp_pattern.md) | [Sub-Agent Delegation](./sub_agent_delegation_pattern.md) | [Strict IDE Binding](./strict_ide_profile_binding.md) | **Gateway Router Pattern** |
 | :--- | :--- | :--- | :--- | :--- |
 | **Trust Boundary** | MCP Server Payload | Agent Prompt Layer | IDE User Interface | **Network Proxy Layer** |
-| **Enforcement Point** | Server-side (`dlp.py`) | Orchestrating Agent | Client Config (`config.json`) | Centralized Proxy (`litellm`) |
+| **Enforcement Point** | Server-side (`dlp.py`) | Orchestrating Agent | Client Config (`config.json`) | Centralized Proxy (`litellm` / `gateway_proxy.py`) |
 | **Developer Friction** | **Zero** | Low | Low-Medium (Profile Switch) | **Zero** (Completely Transparent) |
-| **Implementation Effort** | Low-Medium | Medium | Minimal (Config only) | High (Requires Proxy Infra) |
+| **Implementation Effort** | Low-Medium | Medium | Minimal (Config only) | Medium-High (Proxy & Routing Middleware) |
 | **Best Suited For** | Scrubbing PII, tokens, IPs | Proprietary algorithms & quants | Air-gapped / ITAR defense | **Enterprise-wide developer fleets** |
 
 ---
 
-## 7. Related Documentation & Next Steps
+## 7. Concrete Implementation & Verification in this Repository
+
+The Gateway Router pattern is fully implemented and tested within this repository:
+
+1. **LiteLLM Production Configuration ([`config/litellm_config.yaml`](../../config/litellm_config.yaml)):**
+   - Configures `frontier-reasoning` (Claude 3.5 Sonnet / GPT-4o) and `local-secure` (Qwen 2.5 32B via Ollama / vLLM on `http://localhost:11434/v1`).
+   - Declares tool-name matching rules for all sensitive telemetry tools (`read_recent_errors`, `get_system_health`, `search_logs_by_pattern`, `filter_logs`, `delegate_telemetry_investigation`, `get_security_posture`, `sanitize_telemetry_payload`).
+   - Enforces `strip_raw_tool_results_before_cloud_handoff: true` and `fail_closed: true`.
+
+2. **Standalone Gateway Proxy Prototype ([`scripts/gateway_proxy.py`](../../scripts/gateway_proxy.py)):**
+   - Starlette ASGI application implementing OpenAI `/v1/chat/completions`, `/health`, `/metrics`, and `/audit` endpoints.
+   - Evaluates incoming request JSON for tool schemas, assistant tool calls, and tool responses.
+   - **Fail-Closed Enforcement:** If the local secure endpoint is unreachable or offline, restricted tool calls abort with HTTP 503 (`fail_closed_security_violation`), strictly preventing any fallback to cloud providers.
+   - **State Pruning:** Implements context hygiene by abstracting raw error traces before control is handed back to cloud models.
+   - **Centralized Metrics:** Records request counts, tool diversions, token savings, and structured audit logs.
+
+3. **Automated Test Suite ([`tests/test_gateway_router.py`](../../tests/test_gateway_router.py)):**
+   - 11 comprehensive tests validating:
+     - YAML configuration loading and parsing.
+     - Benign prompt routing to `frontier-reasoning`.
+     - Tool schema, tool call, and tool result routing to `local-secure`.
+     - Embedded telemetry trace signature interception.
+     - Fail-closed security guarantee under simulated upstream failure.
+     - Context state pruning and raw trace abstraction.
+     - Metrics tracking and audit log recording.
+
+```bash
+# Launch the Gateway Router proxy
+python scripts/gateway_proxy.py --port 4000 --config config/litellm_config.yaml
+
+# Execute test suite
+uv run pytest -v tests/test_gateway_router.py
+```
+
+---
+
+## 8. Related Documentation & Next Steps
 
 - 🏢 [**Hybrid-Trust Architecture & Enterprise Use Cases**](./hybrid_trust_use_cases.md) — Comprehensive guide on quantitative trading, HIPAA, and air-gapped defense.
 - 🛡️ [**Dynamic DLP Pattern**](./dynamic_dlp_pattern.md) — In-server payload sanitization and credential scrubbing.
 - 🤝 [**Sub-Agent Delegation Pattern**](./sub_agent_delegation_pattern.md) — Two-tier agent orchestration with local sub-agents.
 - ⚙️ [**Strict IDE Profile Binding**](./strict_ide_profile_binding.md) — UI air-gapping within Continue.dev.
+- 🎬 [**Showcase Runbook & Live Demo**](../runbooks/showcase_runbook.md) — 5-minute interactive demonstration script.

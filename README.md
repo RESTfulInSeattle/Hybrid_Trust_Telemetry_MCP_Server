@@ -6,7 +6,7 @@
 [![SDK](https://img.shields.io/badge/Framework-MCPServer%20(MCP%20SDK%202.x)-purple.svg)](https://github.com/modelcontextprotocol/python-sdk)
 [![Code Style](https://img.shields.io/badge/Code%20Style-Ruff-black.svg)](https://github.com/astral-sh/ruff)
 [![Type Checking](https://img.shields.io/badge/Type%20Checking-Mypy%20Strict-blue.svg)](https://mypy-lang.org/)
-[![Test Suite](https://img.shields.io/badge/Tests-9%20Suites%20Passing-brightgreen.svg)](https://pytest.org/)
+[![Test Suite](https://img.shields.io/badge/Tests-10%20Suites%20Passing-brightgreen.svg)](https://pytest.org/)
 [![Security](https://img.shields.io/badge/Security-Hybrid--Trust%20DLP-darkgreen.svg)](#-hybrid-trust-architecture-protecting-trade-secrets)
 
 > **A production-ready Model Context Protocol (MCP) server providing governed application telemetry, system health probes, and log diagnostics to AI agents—featuring an enterprise Hybrid-Trust Architecture to protect trade secrets and sensitive customer data.**
@@ -140,7 +140,7 @@ flowchart LR
 | 🛡️ [**Dynamic DLP at MCP Layer**](./docs/architecture/dynamic_dlp_pattern.md) | MCP Server Middleware | PCI-DSS cardholder data (Luhn-checked), HIPAA PII, JWTs, RFC 1918 IPs | **Zero** (Completely Transparent) | **Implemented & Verified** |
 | 🤝 [**Sub-Agent Delegation**](./docs/architecture/sub_agent_delegation_pattern.md) | Agent Orchestration | Core proprietary algorithms, quantitative trading weights, ring buffers | Low (Handled by Primary Agent) | **Implemented & Verified** |
 | ⚙️ [**Strict IDE Profile Binding**](./docs/architecture/strict_ide_profile_binding.md) | Client Extension (Continue / VS Code) | Air-gapped defense (ITAR), accidental cloud tool exposure | Low-Medium (Profile Switch) | **Implemented & Verified** |
-| 🔀 [**Gateway Router Pattern**](./docs/architecture/gateway_router_pattern.md) | Network Proxy (LiteLLM) | Enterprise developer fleets, dynamic token arbitrage, unified audit trails | **Zero** (Automated at Network Layer) | **Architected & Specified** |
+| 🔀 [**Gateway Router Pattern**](./docs/architecture/gateway_router_pattern.md) | Network Proxy (LiteLLM) | Enterprise developer fleets, dynamic token arbitrage, unified audit trails | **Zero** (Automated at Network Layer) | **Implemented & Verified** |
 
 👉 *For pattern selection flowcharts, 4-layer defense architecture, threat modeling, and deep-dive use cases (HFT quantitative trading, HIPAA/PCI-DSS, air-gapped defense), explore the [**Architecture & Hybrid-Trust Hub**](./docs/architecture/README.md) and [**Enterprise Use Cases Guide**](./docs/architecture/hybrid_trust_use_cases.md).*
 
@@ -189,6 +189,14 @@ Beyond the MCP server itself, the repository provides production tooling for tes
 3. **Production Continue.dev Reference Config (`examples/continue_config.json`):**
    - Turnkey dual-profile setup pairing Claude 3.5 Sonnet (general engineering) with local Qwen 2.5 Coder on Ollama (secure telemetry).
 
+4. **AI Gateway Router & Dynamic Model Swapper (`scripts/gateway_proxy.py`):**
+   - Standalone Starlette / ASGI proxy intercepting OpenAI `/v1/chat/completions` requests.
+   - Evaluates tool schemas and traces in real time, routing sensitive telemetry calls to `local-secure` with fail-closed security guarantees (zero cloud egress).
+   - Reference LiteLLM configuration provided in [`config/litellm_config.yaml`](./config/litellm_config.yaml).
+   ```bash
+   python scripts/gateway_proxy.py --port 4000 --config config/litellm_config.yaml
+   ```
+
 ---
 
 ## 🗺️ Project Roadmap & Current Status
@@ -205,16 +213,16 @@ flowchart TD
         M5["Phase 5:<br/>Dynamic DLP (Server Layer)"]
         M6["Phase 6:<br/>Strict IDE Binding (Client Layer)"]
         M7["Phase 7:<br/>Sub-Agent Delegation (Agent Layer)"]
+        M8["Phase 8:<br/>Gateway Router (Network Layer)"]
     end
 
     subgraph InFlight["🚀 In-Flight & Planned"]
-        M8["Phase 8:<br/>Gateway Router (Network Layer)"]
         M9["Phase 9:<br/>Remote SSE & Containers"]
         M10["Phase 10:<br/>Enterprise E2E Benchmark Suite"]
     end
 
-    M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7
-    M7 -.-> M8 --> M9 --> M10
+    M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7 --> M8
+    M8 -.-> M9 --> M10
 ```
 
 | Phase | Milestone Name | Key Deliverables | Status |
@@ -226,7 +234,7 @@ flowchart TD
 | **05** | **Hybrid-Trust: Dynamic DLP** | Luhn-validated PAN masking, HIPAA scrubbing, token redactions, origin modes | **Completed** |
 | **06** | **Hybrid-Trust: Strict IDE Binding** | Continue.dev dual profiles, `verify_ide_isolation.py` pre-flight linter | **Completed** |
 | **07** | **Hybrid-Trust: Sub-Agent Delegation** | Two-tier agent hierarchy, `delegate_telemetry_investigation`, local fallback | **Completed** |
-| **08** | **Hybrid-Trust: Gateway Router** | Tool-triggered proxy model swapping with LiteLLM / Envoy sidecar | *Architected* |
+| **08** | **Hybrid-Trust: Gateway Router** | Tool-triggered proxy model swapping, fail-closed enforcement, LiteLLM config | **Completed** |
 | **09** | **Remote SSE & Containers** | Multi-stage Dockerfile, Starlette SSE transport daemon, HTTP Bearer auth | *In-Flight* |
 | **10** | **Enterprise E2E Verification** | High-concurrency benchmarks, end-to-end chaos tests, SOC 2 compliance pack | *Planned* |
 
@@ -288,6 +296,27 @@ python scripts/simulate_incident.py --burst 15 --scenario all
 
 # Audit IDE configuration against Hybrid-Trust isolation rules
 python scripts/verify_ide_isolation.py --config examples/continue_config.json
+```
+
+#### Option E: AI Gateway Router & Dynamic Model Swapping Proxy
+Launch the Gateway Router on port 4000 to intercept OpenAI-compatible completions and route sensitive MCP tools dynamically to `local-secure`:
+```bash
+# Launch Gateway Router with tool-name inspection and fail-closed security
+python scripts/gateway_proxy.py --port 4000 --config config/litellm_config.yaml
+
+# Test routing in a separate terminal:
+# 1. Benign request -> routes to frontier-reasoning
+curl -X POST http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Explain quicksort"}]}'
+
+# 2. Sensitive telemetry request -> dynamically diverted to local-secure (zero cloud egress)
+curl -X POST http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Triage"}], "tools": [{"function": {"name": "read_recent_errors"}}]}'
+
+# 3. View live route diversion metrics and token savings
+curl http://localhost:4000/metrics
 ```
 
 ---

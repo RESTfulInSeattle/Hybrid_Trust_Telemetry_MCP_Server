@@ -66,6 +66,8 @@ Telemetry_MCP_Server/
 ├── AGENTS.md                          # This agent operating specification & development contract
 ├── README.md                          # Public showcase, quickstart & documentation index
 ├── pyproject.toml                     # Project metadata and dependencies (managed by uv)
+├── config/                            # AI Gateway & infrastructure configurations
+│   └── litellm_config.yaml            # Tool-triggered model routing & fail-closed proxy rules
 ├── docs/                              # Project documentation & guides
 │   ├── README.md                      # Documentation index & navigation map
 │   ├── architecture.md                # Deep-dive system design, security & MCP mechanics
@@ -78,16 +80,23 @@ Telemetry_MCP_Server/
 │   │   └── showcase_runbook.md        # 5-minute live demo script & interview talking points
 │   └── tutorials/                     # Step-by-step guides & tutorials
 │       └── building_your_first_mcp_server.md # Foundation walkthrough
+├── scripts/                           # Operational scripts and proxy prototypes
+│   ├── gateway_proxy.py               # Tool-triggered AI Gateway Router proxy (Starlette)
+│   ├── simulate_incident.py           # Multi-service fault & log injection simulator
+│   └── verify_ide_isolation.py        # Pre-flight IDE configuration linter
 ├── src/
 │   └── telemetry_mcp_server/
 │       ├── __init__.py                # Package exports
 │       ├── server.py                  # MCPServer instance and entrypoint
 │       ├── config.py                  # Environment config (log dirs, line limits, auth)
+│       ├── dlp.py                     # Dynamic DLP engine (PCI-DSS, HIPAA, credentials)
 │       ├── security.py                # Path traversal sanitizers and input validators
 │       ├── tools/                     # Modular MCP tools
 │       │   ├── __init__.py
 │       │   ├── health.py              # System health & metrics probes
-│       │   └── logs.py                # Log tailing, regex search, level filtering
+│       │   ├── logs.py                # Log tailing, regex search, level filtering
+│       │   ├── delegation.py          # Sub-agent delegation & local synthesizer
+│       │   └── security_posture.py    # Governance & compliance reporting
 │       ├── resources/                 # MCP Resources (telemetry:// URIs)
 │       │   ├── __init__.py
 │       │   └── log_streams.py
@@ -98,7 +107,14 @@ Telemetry_MCP_Server/
 │   ├── conftest.py                    # Pytest fixtures and mock log generators
 │   ├── test_security.py               # Security & path traversal tests
 │   ├── test_health.py                 # Health probe tests
-│   └── test_logs.py                   # Log retrieval and filtering tests
+│   ├── test_logs.py                   # Log retrieval and filtering tests
+│   ├── test_filter_logs.py            # Structured log parser & timestamp tests
+│   ├── test_dlp.py                    # Dynamic DLP regex & Luhn tests
+│   ├── test_delegation.py             # Sub-agent delegation tests
+│   ├── test_gateway_router.py         # AI Gateway dynamic routing & fail-closed tests
+│   ├── test_verify_ide_isolation.py   # IDE isolation pre-flight linter tests
+│   ├── test_simulate_incident.py      # Incident generator tests
+│   └── test_security_posture.py       # Security posture probe tests
 └── logs/                              # Mock / test log files (gitignored except sample templates)
     ├── auth.log
     ├── payment.log
