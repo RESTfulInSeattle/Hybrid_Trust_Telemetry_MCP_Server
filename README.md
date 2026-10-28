@@ -406,6 +406,7 @@ This project demonstrates advanced, production-grade AI systems engineering conc
 
 ## 📚 Supporting Documentation & Architecture Index
 
+<<<<<<< Updated upstream
 - 🧭 [**Documentation Hub (`docs/README.md`)**](./docs/README.md) — Central documentation index, Diátaxis structure, and reading paths.
 - 🏛️ [**Architecture & Hybrid-Trust Hub (`docs/architecture/README.md`)**](./docs/architecture/README.md) — 4-layer defense model, decision flowcharts, and pattern comparisons.
 - 🛡️ [**Hybrid-Trust Enterprise Use Cases (`docs/architecture/hybrid_trust_use_cases.md`)**](./docs/architecture/hybrid_trust_use_cases.md) — Deep-dive HFT, HIPAA/PCI, and air-gapped threat models.
@@ -418,6 +419,17 @@ This project demonstrates advanced, production-grade AI systems engineering conc
 - 🎬 [**Showcase Runbook (`docs/runbooks/showcase_runbook.md`)**](./docs/runbooks/showcase_runbook.md) — 5-minute live demo script and interview walkthrough.
 - 📖 [**Tutorial: Building Your First MCP Server (`docs/tutorials/building_your_first_mcp_server.md`)**](./docs/tutorials/building_your_first_mcp_server.md) — Foundation walkthrough.
 - 🤖 [**AI Agent Contract (`AGENTS.md`)**](./AGENTS.md) — Operating guidelines and quality gates for AI collaborators.
+=======
+- 🧭 [**Documentation Hub (`docs/README.md`)**](./docs/README.md) — Central documentation index and navigation map.
+- 🔧 [**Agent Tools Reference Directory (`docs/tools_reference/`)**](./docs/tools_reference/README.md) — Comprehensive operational catalog, schemas, and enterprise expansion patterns for all 8 MCP tools ([quick reference portal](./docs/tools_reference.md)).
+- 🤖 [**`AGENTS.md`**](./AGENTS.md) — The AI agent operating contract, coding standards, and runbooks.
+- 🏛️ [**`docs/architecture.md`**](./docs/architecture.md) — Deep dive into the MCP protocol, security boundary design, and wire protocol.
+- 🛡️ [**`docs/architecture/hybrid_trust_use_cases.md`**](./docs/architecture/hybrid_trust_use_cases.md) — Enterprise hybrid-trust use cases, trade secret protection, and threat models.
+- 📐 [**`docs/architecture/README.md`**](./docs/architecture/README.md) — Modular architecture patterns (Dynamic DLP, Sub-Agent, Profile Binding, Gateway Router).
+- 🗺️ [**`docs/roadmap.md`**](./docs/roadmap.md) — Phased skill development curriculum (MVP to Enterprise Hybrid-Trust Architectures).
+- 🎬 [**`docs/runbooks/showcase_runbook.md`**](./docs/runbooks/showcase_runbook.md) — 5-minute live demo script and interview walkthrough.
+- 📖 [**`docs/tutorials/building_your_first_mcp_server.md`**](./docs/tutorials/building_your_first_mcp_server.md) — Step-by-step foundation walkthrough.
+>>>>>>> Stashed changes
 
 ---
 

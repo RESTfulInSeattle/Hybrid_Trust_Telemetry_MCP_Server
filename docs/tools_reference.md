@@ -2,6 +2,22 @@
 
 This document provides a comprehensive operational and schema reference for all Model Context Protocol (MCP) tools exposed by `telemetry_mcp_server` (`TelemetryInspector`).
 
+> [!NOTE]
+> **Modular Enterprise Tool Reference Directory:**
+> This reference guide is expanded into a modular documentation folder: [**`docs/tools_reference/`**](./tools_reference/README.md).
+> Each tool has an in-depth reference file detailing its parameters, schemas, failure modes, and enterprise productionization patterns (OpenTelemetry, Grafana Loki, DuckDB, Google `re2`, AWS Nitro Enclaves, and Presidio NER).
+>
+> | Tool Reference Guide | Key Enterprise Focus |
+> | :--- | :--- |
+> | 🔧 [**`get_system_health.md`**](./tools_reference/get_system_health.md) | OpenTelemetry, Prometheus PromQL, Kubernetes Pod CrashLoops, PagerDuty |
+> | 🔍 [**`list_available_services.md`**](./tools_reference/list_available_services.md) | Backstage CMDB, HashiCorp Consul, RBAC/ABAC Tenant Isolation |
+> | 📜 [**`read_recent_errors.md`**](./tools_reference/read_recent_errors.md) | Grafana Loki (LogQL), Elasticsearch, Semantic Deduplication, Trace Linking |
+> | 🎯 [**`search_logs_by_pattern.md`**](./tools_reference/search_logs_by_pattern.md) | Google `re2` Linear Engine, ClickHouse Bloom Filters, Hybrid Vector Search |
+> | 📊 [**`filter_logs.md`**](./tools_reference/filter_logs.md) | DuckDB Vectorized Parquet Engine, SIMD execution, SSE Subscriptions |
+> | 🛡️ [**`delegate_telemetry_investigation.md`**](./tools_reference/delegate_telemetry_investigation.md) | AWS Nitro Enclaves, AMD SEV-SNP, Specialized SRE SLMs, Local ReAct Loops |
+> | 🌐 [**`get_security_posture.md`**](./tools_reference/get_security_posture.md) | SIEM Streaming (Splunk / Sentinel), Continuous SOC2/HIPAA Auditing |
+> | 🔒 [**`sanitize_telemetry_payload.md`**](./tools_reference/sanitize_telemetry_payload.md) | Microsoft Presidio NLP NER, HashiCorp Vault Format-Preserving Tokenization |
+
 ---
 
 ## 1. Overview & Governance Principles
@@ -39,6 +55,8 @@ flowchart TD
 ## 2. Tool Reference Catalog
 
 ### 2.1 `get_system_health`
+
+> 📘 **In-Depth Enterprise Reference:** [**`docs/tools_reference/get_system_health.md`**](./tools_reference/get_system_health.md) — Includes Prometheus PromQL integration, Kubernetes cluster state aggregation, and PagerDuty alert deduplication.
 
 Retrieves the current high-level operational status of foundational services, database latency metrics, active connections, and inference runtime status.
 
@@ -112,6 +130,8 @@ def get_system_health() -> str
 
 ### 2.2 `list_available_services`
 
+> 📘 **In-Depth Enterprise Reference:** [**`docs/tools_reference/list_available_services.md`**](./tools_reference/list_available_services.md) — Includes Spotify Backstage & Consul discovery, RBAC/ABAC tenant isolation, and service tiering metadata.
+
 Scans the configured log directory and returns all service identifiers available for inspection.
 
 - **Implementation:** [`list_available_services()`](../src/telemetry_mcp_server/server.py) -> [`tools.logs.list_available_services()`](../src/telemetry_mcp_server/tools/logs.py)
@@ -166,6 +186,8 @@ def list_available_services() -> list[str]
 ---
 
 ### 2.3 `read_recent_errors`
+
+> 📘 **In-Depth Enterprise Reference:** [**`docs/tools_reference/read_recent_errors.md`**](./tools_reference/read_recent_errors.md) — Includes Grafana Loki (LogQL) drivers, semantic error deduplication, and token-aware context bounding.
 
 Tails the most recent log entries for a target service with strict context-window bounding.
 
@@ -246,6 +268,8 @@ def read_recent_errors(service_name: str, lines: int = 50) -> str
 
 ### 2.4 `search_logs_by_pattern`
 
+> 📘 **In-Depth Enterprise Reference:** [**`docs/tools_reference/search_logs_by_pattern.md`**](./tools_reference/search_logs_by_pattern.md) — Includes Google `re2` ReDoS protection, OpenSearch Lucene inverted index queries, and hybrid vector search.
+
 Searches log entries for a specific service using regular expressions or case-insensitive substrings.
 
 - **Implementation:** [`search_logs_by_pattern(service_name, pattern, max_matches)`](../src/telemetry_mcp_server/server.py) -> [`tools.logs.search_logs_by_pattern()`](../src/telemetry_mcp_server/tools/logs.py)
@@ -322,6 +346,8 @@ def search_logs_by_pattern(service_name: str, pattern: str, max_matches: int = 2
 
 ### 2.5 `filter_logs`
 
+> 📘 **In-Depth Enterprise Reference:** [**`docs/tools_reference/filter_logs.md`**](./tools_reference/filter_logs.md) — Includes DuckDB vectorized Parquet query engine, multi-dimensional SQL predicates, and real-time streaming subscriptions.
+
 Filters logs for a specific service by minimum severity level and/or timestamp window. Supports both structured JSON logs (NDJSON) and standard syslog/bracketed lines.
 
 - **Implementation:** [`filter_logs()`](../src/telemetry_mcp_server/server.py) -> [`tools.logs.filter_logs()`](../src/telemetry_mcp_server/tools/logs.py)
@@ -349,6 +375,8 @@ def filter_logs(
 
 ### 2.6 `delegate_telemetry_investigation`
 
+> 📘 **In-Depth Enterprise Reference:** [**`docs/tools_reference/delegate_telemetry_investigation.md`**](./tools_reference/delegate_telemetry_investigation.md) — Includes AWS Nitro Enclaves, confidential AMD SEV-SNP execution, domain-adapted SRE SLMs, and local ReAct diagnostic loops.
+
 Delegates sensitive telemetry diagnostics to an on-premise local sub-agent (or governed local analyzer). Protects proprietary algorithms, trade secrets, and internal stack traces from cloud context pollution.
 
 - **Implementation:** [`delegate_telemetry_investigation()`](../src/telemetry_mcp_server/server.py) -> [`tools.delegation.delegate_telemetry_investigation()`](../src/telemetry_mcp_server/tools/delegation.py)
@@ -368,6 +396,8 @@ def delegate_telemetry_investigation(
 
 ### 2.7 `get_security_posture`
 
+> 📘 **In-Depth Enterprise Reference:** [**`docs/tools_reference/get_security_posture.md`**](./tools_reference/get_security_posture.md) — Includes real-time SIEM streaming (Splunk/Sentinel), continuous SOC2/HIPAA evidence collection, and SPIFFE workload identity.
+
 Returns real-time telemetry on the server's Hybrid-Trust security posture, active trust zone (`STRICT_LOCAL` vs `REDACTED_CLOUD`), active DLP scrubbers, and cumulative redaction statistics.
 
 - **Implementation:** [`get_security_posture()`](../src/telemetry_mcp_server/server.py) -> [`tools.security_posture.get_security_posture()`](../src/telemetry_mcp_server/tools/security_posture.py)
@@ -381,6 +411,8 @@ def get_security_posture() -> str
 ---
 
 ### 2.8 `sanitize_telemetry_payload`
+
+> 📘 **In-Depth Enterprise Reference:** [**`docs/tools_reference/sanitize_telemetry_payload.md`**](./tools_reference/sanitize_telemetry_payload.md) — Includes Microsoft Presidio NLP NER models, format-preserving encryption (Vault Transform), and Intel Hyperscan SIMD acceleration.
 
 Governed DLP utility tool allowing clients or gateways to sanitize arbitrary payloads against PCI-DSS (Luhn check), HIPAA/PII, credentials/keys, RFC 1918 IPs, and proprietary symbols.
 
